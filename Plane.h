@@ -10,7 +10,6 @@ class Plane {
 		void InitPlane(float gravin, float scalin, float xin, float yin, float zin, float xang, float yang);
 		void DrawPlane(); // draws plane (with scaling)
 		void MovePlane(); // moves plane according to velocity
-		// void AimPlane(int xPitch, int yYaw);
 		void SetPitch(int timerIn);
 		void SetYaw(int timerIn);
 		void SetPower(int timerIn);

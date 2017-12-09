@@ -32,11 +32,6 @@ float camTarget[] = {0, 34, 5};
 int launchState = 0; // 0=none, 1=pitch, 2=yaw, 3=power
 int wheelTimer;
 
-//// plane obj ////
-// std::vector<float> vertices;
-// std::vector<float> uvs;
-// std::vector<float> normals;
-
 void FloorMesh() {
 	glDisable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -53,22 +48,8 @@ void FloorMesh() {
 	}
 }
 
-// void DrawOBJPlane() {
-// 	glEnable(GL_LIGHTING);
-// 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-// 	glDisable(GL_CULL_FACE);
-
-// 	glBegin(GL_TRIANGLES);
-// 		for (int i=0; i<vertices.size(); i+=3) {
-// 			glNormal3f(normals[i], normals[i+1], normals[i+2]);
-// 			glVertex3f(vertices[i], vertices[i+1], vertices[i+2]);
-// 		}
-// 	glEnd();
-
-// 	glEnable(GL_CULL_FACE);
-// }
-
 void LaunchSequence() {
+	glDisable(GL_LIGHTING);
 	wheelTimer++;
 	if (wheelTimer>50) {
 		wheelTimer = -50;
@@ -129,16 +110,7 @@ void display(void) {
 			// DrawOBJPlane();
 		glPopMatrix();
 
-		// if (launchState == 0) {
-		// 	glLineWidth(5);
-		// 	glBegin(GL_LINES);
-		// 		glColor3f(0,0,0);
-		// 		glVertex3f(0,0,3);
-		// 		glVertex3f(0,0,-3);
-		// 	glEnd();
-		// 	glLineWidth(1);
-		// }
-		if (launchState != 0) {
+		if (launchState != 0 && launchState != 4) {
 			LaunchSequence();
 		}
 
@@ -179,7 +151,7 @@ void mouse(int btn, int state, int x, int y){
 
 				case 3: // power set, launches
 					wheelTimer = -30;
-					launchState = 0;
+					launchState = 4;
 					currentPlane->inFlight = true;
 					currentPlane->LaunchPlane();
 					break;
@@ -189,9 +161,6 @@ void mouse(int btn, int state, int x, int y){
 }
 
 void mouseMotion(int x, int y){
-	// if (aiming) {
-	// 	currentPlane->AimPlane(x, y);
-	// }
 }
 
 void mousePassiveMotion(int x, int y){
@@ -256,82 +225,6 @@ void special(int key, int xIn, int yIn){
 	}
 }
 
-////////vvvv  OBJ FILE LOADER vvvv////////
-
-// bool loadOBJ(const char * path, std::vector<float> &out_vertices, std::vector<float> &out_uvs, std::vector<float> &out_normals) {
-// 	std::vector< unsigned int > vertexIndices, uvIndices, normalIndices; // vertex/uv/normal format in each line starting with 'f'
-// 	std::vector<float> temp_vertices;
-// 	std::vector<float> temp_uvs;
-// 	std::vector<float> temp_normals;
-
-// 	FILE * file = fopen(path, "r");
-// 	if( file == NULL ){
-// 		printf("Impossible to open the file !\n");
-// 		return false;
-// 	}
-
-// 	while( 1 ){
-// 		char lineHeader[128];
-// 		// read the first word of the line
-// 		int res = fscanf(file, "%s", lineHeader);
-// 		if (res == EOF)
-// 			break;
-
-// 		if ( strcmp( lineHeader, "v" ) == 0 ){
-// 			float vertex1, vertex2, vertex3;
-// 			fscanf(file, "%f %f %f\n", &vertex1, &vertex2, &vertex3 );
-// 			temp_vertices.push_back(vertex1);
-// 			temp_vertices.push_back(vertex2);
-// 			temp_vertices.push_back(vertex3);
-// 		} else if ( strcmp( lineHeader, "vt" ) == 0 ){
-// 			float uv1, uv2;
-// 			fscanf(file, "%f %f\n", &uv1, &uv2 );
-// 			temp_uvs.push_back(uv1);
-// 			temp_uvs.push_back(uv2);
-// 		} else if ( strcmp( lineHeader, "vn" ) == 0 ){
-// 			float normal1, normal2, normal3;
-// 			fscanf(file, "%f %f %f\n", &normal1, &normal2, &normal3 );
-// 			temp_normals.push_back(normal1);
-// 			temp_normals.push_back(normal2);
-// 			temp_normals.push_back(normal3);
-// 		}else if ( strcmp( lineHeader, "f" ) == 0 ){
-// 			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-// 			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2] );
-// 			if (matches != 9){
-// 				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
-// 				return false;
-// 			}
-// 			vertexIndices.push_back(vertexIndex[0]);
-// 			vertexIndices.push_back(vertexIndex[1]);
-// 			vertexIndices.push_back(vertexIndex[2]);
-// 			uvIndices.push_back(uvIndex[0]);
-// 			uvIndices.push_back(uvIndex[1]);
-// 			uvIndices.push_back(uvIndex[2]);
-// 			normalIndices.push_back(normalIndex[0]);
-// 			normalIndices.push_back(normalIndex[1]);
-// 			normalIndices.push_back(normalIndex[2]);
-// 		}
-// 	}
-
-// 	for(int i=0; i<vertexIndices.size(); i++) {
-// 		out_vertices.push_back(temp_vertices[(vertexIndices[i]-1)*3]);
-// 		out_vertices.push_back(temp_vertices[(vertexIndices[i]-1)*3+1]);
-// 		out_vertices.push_back(temp_vertices[(vertexIndices[i]-1)*3+2]);
-// 	}
-// 	for(int i=0; i<uvIndices.size(); i++) {
-// 		out_uvs.push_back(temp_uvs[(uvIndices[i]-1)*3]);
-// 		out_uvs.push_back(temp_uvs[(uvIndices[i]-1)*3+1]);
-// 		out_uvs.push_back(temp_uvs[(uvIndices[i]-1)*3+2]);
-// 	}
-// 	for(int i=0; i<normalIndices.size(); i++) {
-// 		out_normals.push_back(temp_normals[(normalIndices[i]-1)*3]);
-// 		out_normals.push_back(temp_normals[(normalIndices[i]-1)*3+1]);
-// 		out_normals.push_back(temp_normals[(normalIndices[i]-1)*3+2]);
-// 	}
-// }
-
-////////^^^^  OBJ FILE LOADER ^^^^////////
-
 //menu stuff
 void menuProc(int value){
 	if (value == 1)
@@ -395,9 +288,8 @@ void init(void)
 
 	currentPlane = new Plane();
 	currentPlane->InitPlane(-0.001, 1, 0, 32, 0, 0, 0);
-	// currentPlane->LaunchPlane();
 
-	// bool wut = loadOBJ("paper_plane.obj", vertices, uvs, normals);
+	remove("launchdata.txt");
 }
 
 /* main function - program entry point */

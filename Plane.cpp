@@ -40,7 +40,6 @@ void Plane::InitPlane(float gravin, float scalin, float xin, float yin, float zi
 	inFlight = false;
 
 	bool wut = LoadOBJ("paper_plane.obj", vertices, uvs, normals);
-
 }
 
 bool Plane::LoadOBJ(const char * path, std::vector<float> &out_vertices, std::vector<float> &out_uvs, std::vector<float> &out_normals) {
@@ -141,8 +140,6 @@ void Plane::DrawPlane() {
 	glEnd();
 
 	glEnable(GL_CULL_FACE);
-	// glRotatef(90, 0, 1, 0);
-	// glutSolidTeapot(1);
 }
 
 void Plane::MovePlane() {
@@ -164,48 +161,18 @@ void Plane::MovePlane() {
 	float velMag = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
 
 	pitch = asin(vel[1]/velMag)*180/PI;
-	printf("pitch: %f\n", pitch);
 }
 
-/*
-void Plane::AimPlane(int xin, int yin) {
-	int rightBound = glutGet(GLUT_WINDOW_WIDTH)/2+200;
-	int leftBound = glutGet(GLUT_WINDOW_WIDTH)/2-200;
-	int topBound = glutGet(GLUT_WINDOW_HEIGHT)/2;
-	int bottomBound = glutGet(GLUT_WINDOW_HEIGHT)/2 + 200;
-
-	// setting min/max rotations
-	int pitchMin = 0;
-	int pitchMax = 25;
-	int yawMin = -45;
-	int yawMax = 45;
-
-	// restricting angles
-	if (xin<leftBound)
-		xin = leftBound;
-	if (xin>rightBound)
-		xin = rightBound;
-	if (yin<topBound)
-		yin = topBound;
-	if (yin>bottomBound)
-		yin = bottomBound;
-
-	// mapping 2D window coords to min/max angles
-	yaw = yawMin + (xin - leftBound)*(yawMax - yawMin)/(rightBound - leftBound);
-	pitch = pitchMin + (yin - topBound)*(pitchMax - pitchMin)/(bottomBound - topBound);
-}
-*/
-
-void Plane::SetPitch(int timerIn) {
+void Plane::SetPitch(int timerIn) { // pitch is between 0 - 25
 	pitch = abs(timerIn)*0.5;
 }
 
-void Plane::SetYaw(int timerIn) {
+void Plane::SetYaw(int timerIn) { // yaw is between -25 - 25
 	yaw = abs(timerIn)-25;
 }
 
-void Plane::SetPower(int timerIn) {
-	power = 0.6/pow(abs(timerIn), 1.0/3.0) + 0.2;
+void Plane::SetPower(int timerIn) { // power is between 0.37 - 0.8
+	power = 0.6/pow(abs(timerIn), 0.33) + 0.2;
 
 	if (timerIn==0)
 		power = 0.8;
@@ -225,8 +192,8 @@ void Plane::LaunchPlane() {
 	vel.push_back(power*velTemp[2]/normalMagn);
 
 	std::ofstream fileout;
-	fileout.open("launchdata.txt");
-	fileout << "Pitch: "<<pitch<<"\nYaw: "<<yaw<<"\nPower: "<<power;
+	fileout.open("launchdata.txt", std::ios_base::app);
+	fileout << "Pitch: "<<pitch<<"\nYaw: "<<yaw<<"\nPower: "<<power<<"\n\n";
 	fileout.close();
 }
 
