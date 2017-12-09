@@ -23,6 +23,8 @@ class Plane {
 		bool inFlight;
 		
 	private:
+		bool LoadOBJ(const char * path, std::vector<float> &out_vertices, std::vector<float> &out_uvs, std::vector<float> &out_normals);
+
 		float gravity;
 		float airFriction;
 		float scale;
@@ -33,6 +35,10 @@ class Plane {
 		float pitch;
 		float yaw;
 		float power;
+
+		std::vector<float> vertices;
+		std::vector<float> uvs;
+		std::vector<float> normals;
 
 };
 
