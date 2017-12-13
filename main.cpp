@@ -29,7 +29,7 @@ float camPos[] = {0, 35, 10};	//where the camera is
 float camTarget[] = {0, 34, 5};
 
 int launchState = 0; // 0=none, 1=pitch, 2=yaw, 3=power
-int wheelTimer;
+bool hit = false;
 
 
 //an array for iamge data
@@ -38,11 +38,22 @@ GLuint textures[2];
 int width, height, maxi;
 int CURRENT = 0;
 
-int bodyRotAngle,bodyRotX,bodyRotY = 0;
-int bodyRotZ = 1 ;
+float bodyRotX,bodyRotY,bodyRotZ = 0;
 
-void getHitAnim(){
-	bodyRotAngle++;
+
+
+void hitTimer(int value){
+	if (hit){
+		if(bodyRotX<30){
+			bodyRotX++;
+		}
+		else if(bodyRotX=30){
+			bodyRotX=0;
+			hit = false;
+		}
+	}
+	glutTimerFunc(20, hitTimer, 0);
+	glutPostRedisplay();
 }
 
 
@@ -53,7 +64,9 @@ void DrawPerson(){
 	glPushMatrix();//person position
 		glTranslatef(0,30,0);
 		glPushMatrix(); //body and head and arms rotation
-			glRotatef(bodyRotAngle,bodyRotX,bodyRotY,bodyRotZ);
+			glRotatef(bodyRotX,1,0,0);
+			glRotatef(bodyRotY,0,1,0);		
+			glRotatef(bodyRotZ,0,0,1);
 			glPushMatrix();//body size
 				glScalef(1,2,1);
 				glColor3f(1,0,0);
@@ -184,11 +197,11 @@ void display(void) {
 	FloorMesh();
 
 	//check rotation between -90 and 90
-	if (bodyRotAngle > 90){
-		bodyRotAngle = 90;
+	if (bodyRotZ > 90){
+		bodyRotZ = 90;
 	}
-	else if (bodyRotAngle < -90){
-		bodyRotAngle = -90;
+	else if (bodyRotZ < -90){
+		bodyRotZ = -90;
 	}
 	DrawPerson();
 
@@ -235,15 +248,15 @@ void keyboard(unsigned char key, int xIn, int yIn) {
 			break;
 
 		case 'n':
-			bodyRotAngle-=1;
+			bodyRotZ-=1;
 			break;
 
 		case 'm':
-			bodyRotAngle+=1;
+			bodyRotZ+=1;
 			break;
 		
 		case '0': //get hit
-			getHitAnim();
+			hit = true;
 			break;
 	}
 }
@@ -303,11 +316,6 @@ void reshape(int w, int h)
 	glViewport(0, 0, w, h);
 }
 
-void FPSTimer(int value){ //60fps
-	glutTimerFunc(17, FPSTimer, 0);
-	glutPostRedisplay();
-}
-
 void initTextures(){
 	//enable texturing
 	glEnable(GL_TEXTURE_2D);
@@ -330,6 +338,12 @@ void initTextures(){
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, snail_tex);
 		
 }
+
+void FPSTimer(int value){ //60fps
+	glutTimerFunc(17, FPSTimer, 0);
+	glutPostRedisplay();
+}
+
 //initialization
 void init(void)
 {
@@ -387,6 +401,8 @@ int main(int argc, char** argv)
 
 	//fps timer callback
 	glutTimerFunc(17, FPSTimer, 0);
+	glutTimerFunc(17, hitTimer, 0);
+	
 
 	init();
 
