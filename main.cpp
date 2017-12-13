@@ -37,7 +37,14 @@ GLubyte* snail_tex;
 GLuint textures[2];
 int width, height, maxi;
 int CURRENT = 0;
-int dodge = 0;
+
+int bodyRotAngle,bodyRotX,bodyRotY = 0;
+int bodyRotZ = 1 ;
+
+void getHitAnim(){
+	bodyRotAngle++;
+}
+
 
 void DrawPerson(){
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -46,7 +53,7 @@ void DrawPerson(){
 	glPushMatrix();//person position
 		glTranslatef(0,30,0);
 		glPushMatrix(); //body and head and arms rotation
-			glRotatef(dodge,0,0,1);
+			glRotatef(bodyRotAngle,bodyRotX,bodyRotY,bodyRotZ);
 			glPushMatrix();//body size
 				glScalef(1,2,1);
 				glColor3f(1,0,0);
@@ -65,13 +72,13 @@ void DrawPerson(){
 				glPushMatrix(); //left arm position
 					glColor3f(1,0,0);
 					glTranslatef(-1.5,0,0);
-					glRotatef(-60,1,0,0);
+					glRotatef(0,0,0,1);
 					glutSolidCube(1);
 				glPopMatrix();//end left arm loc
 				glPushMatrix();//right arm loc
 					glColor3f(1,0,0);
 					glTranslatef(1.5,0,0);
-					glRotatef(15,0,0,1);
+					glRotatef(0,0,0,1);
 					glutSolidCube(1);
 				glPopMatrix();//end right arm loc
 			glPopMatrix();//end arm size
@@ -177,11 +184,11 @@ void display(void) {
 	FloorMesh();
 
 	//check rotation between -90 and 90
-	if (dodge > 90){
-		dodge = 90;
+	if (bodyRotAngle > 90){
+		bodyRotAngle = 90;
 	}
-	else if (dodge < -90){
-		dodge = -90;
+	else if (bodyRotAngle < -90){
+		bodyRotAngle = -90;
 	}
 	DrawPerson();
 
@@ -228,13 +235,16 @@ void keyboard(unsigned char key, int xIn, int yIn) {
 			break;
 
 		case 'n':
-			dodge-=1;
+			bodyRotAngle-=1;
 			break;
 
 		case 'm':
-			dodge+=1;
+			bodyRotAngle+=1;
 			break;
-
+		
+		case '0': //get hit
+			getHitAnim();
+			break;
 	}
 }
 
