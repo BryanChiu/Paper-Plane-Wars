@@ -117,13 +117,27 @@ void DrawPerson(){
 }
 
 void FloorMesh() {
+	//glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHT0);
 	glDisable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	
+	//material
+	float m_amb0[4] = {0.0,0.05,0.0,1}; //ambient light
+	float m_diff0[3] = {0.4,0.5,0.4}; //shadows casting
+	float m_spec0[3] = {0.04,0.7,0.04};
+	float shine = 0.078125;
+	
+    glMaterialfv(GL_FRONT,GL_AMBIENT,m_amb0);
+    glMaterialfv(GL_FRONT,GL_DIFFUSE,m_diff0);
+	glMaterialfv(GL_FRONT,GL_SPECULAR,m_spec0);
+	glMaterialf(GL_FRONT, GL_SHININESS, shine * 128.0);
+	
 	glCullFace(GL_BACK);
 	for (int i=0; i>-100-1; i--) {
 		glBegin(GL_QUAD_STRIP);
 			for (int j=50; j>-50; j--) {
-				glColor3f(0,1,0);
+				//glColor3f(0,1,0);
 				glVertex3f(j, 0, i);
 				glVertex3f(j, 0, i-1);
 			}
