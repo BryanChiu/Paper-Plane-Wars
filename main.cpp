@@ -55,15 +55,17 @@ bool dodge = false;
 
 void dodgeTimer(int value){
 	if (dodge){
+
+		printf("%d\n", planePos[0]);
 		//change position to dodge plane
 		if(planePos[0] > 0){
 			if(oppRotZ<10){
 				oppRotZ++;
 			}
-			//else if(bodyRotX=10){
-			//	bodyRotX=0;
-			//	dodge = false;
-			//}
+		}
+		if(planePos[2] < -60){
+			oppRotZ = 0;
+			dodge = false;
 		}
 	}
 	glutTimerFunc(20, dodgeTimer, 0);

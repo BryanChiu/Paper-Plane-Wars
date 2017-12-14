@@ -1,4 +1,4 @@
-Pitch: 15.5
-Yaw: -16
-Power: 0.515696
+Pitch: 7.5
+Yaw: -3
+Power: 0.419694
 
