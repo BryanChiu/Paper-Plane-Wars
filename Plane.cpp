@@ -25,10 +25,10 @@
 Plane::Plane() {}
 
 // initialize 2D array of heights
-void Plane::InitPlane(float gravin, float scalin, float xin, float yin, float zin, float xang, float yang) {
+void Plane::InitPlane(int id, char *file, float gravin, float xin, float yin, float zin, float xang, float yang) {
+	ID = id;
 	gravity = gravin;
 	airFriction = 0.995;
-	scale = scalin;
 
 	pos.push_back(xin);
 	pos.push_back(yin);
@@ -39,7 +39,32 @@ void Plane::InitPlane(float gravin, float scalin, float xin, float yin, float zi
 
 	inFlight = false;
 
-	bool wut = LoadOBJ("paper_plane.obj", vertices, uvs, normals);
+	bool wut = LoadOBJ(file, vertices, uvs, normals);
+
+	// create bounding box
+	for (int i=0; i<3; i++) {
+		float max = 0.0;
+		float min = 0.0;
+		for (int j=i; j<vertices.size(); j+=3) {
+			if (vertices[j]>max) {
+				max = vertices[j];
+			}
+			if (vertices[j]<min) {
+				min = vertices[j];
+			}
+		}
+		boundMax.push_back(max);
+		boundMin.push_back(min);
+	}
+
+	// create face normals
+	for (int i=-1; i<2; i+=2) {
+		for (int j=0; j<3; j++) {
+			std::vector<float> normVec (3, 0);
+			normVec[j] = i;
+			faceNorms.push_back(normVec);
+		}
+	}
 }
 
 bool Plane::LoadOBJ(const char * path, std::vector<float> &out_vertices, std::vector<float> &out_uvs, std::vector<float> &out_normals) {
@@ -78,7 +103,7 @@ bool Plane::LoadOBJ(const char * path, std::vector<float> &out_vertices, std::ve
 			temp_normals.push_back(normal1);
 			temp_normals.push_back(normal2);
 			temp_normals.push_back(normal3);
-		}else if ( strcmp( lineHeader, "f" ) == 0 ){
+		} else if ( strcmp( lineHeader, "f" ) == 0 ){
 			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
 			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2] );
 			if (matches != 9){
@@ -94,6 +119,16 @@ bool Plane::LoadOBJ(const char * path, std::vector<float> &out_vertices, std::ve
 			normalIndices.push_back(normalIndex[0]);
 			normalIndices.push_back(normalIndex[1]);
 			normalIndices.push_back(normalIndex[2]);
+		} else if ( strcmp( lineHeader, "m1" ) == 0 ) {
+			float ambi1, ambi2, ambi3, ambi4, diff1, diff2, diff3, diff4, spec1, spec2, spec3, spec4, shin;
+			fscanf(file, "%f %f %f %f, %f %f %f %f, %f %f %f %f, %f\n", &ambi1, &ambi2, &ambi3, &ambi4, &diff1, &diff2, &diff3, &diff4, &spec1, &spec2, &spec3, &spec4, &shin);
+			materialStruct tempMat = {{ambi1, ambi2, ambi3, ambi4}, {diff1, diff2, diff3, diff4}, {spec1, spec2, spec3, spec4}, shin};
+			materialMain = tempMat;
+		} else if ( strcmp( lineHeader, "m2" ) == 0 ) {
+			float ambi1, ambi2, ambi3, ambi4, diff1, diff2, diff3, diff4, spec1, spec2, spec3, spec4, shin;
+			fscanf(file, "%f %f %f %f, %f %f %f %f, %f %f %f %f, %f\n", &ambi1, &ambi2, &ambi3, &ambi4, &diff1, &diff2, &diff3, &diff4, &spec1, &spec2, &spec3, &spec4, &shin);
+			materialStruct tempMat = {{ambi1, ambi2, ambi3, ambi4}, {diff1, diff2, diff3, diff4}, {spec1, spec2, spec3, spec4}, shin};
+			materialSecondary = tempMat;
 		}
 	}
 
@@ -115,22 +150,20 @@ bool Plane::LoadOBJ(const char * path, std::vector<float> &out_vertices, std::ve
 }
 
 // render terrain
-void Plane::DrawPlane() {
-	glEnable(GL_LIGHTING);
+void Plane::DrawPlane(bool active) {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glDisable(GL_CULL_FACE); //disable culling as plane has no volume
 
-	// material for plane
-	float m_spec[4] = {0.99, 0.98, 0.81,1};
-	float m_shin = 10;
-	float m_diff[4] = {1, 0, 0, 1};
-	float m_ambi[4] = {0.3, 0, 0, 1};
-		
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, m_diff);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, m_ambi);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, m_spec);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, m_shin);
+	glMaterialfv(GL_FRONT, GL_AMBIENT, materialMain.ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, materialMain.diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, materialMain.specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, materialMain.shininess);
 
+	if (!active) {
+		glMaterialfv(GL_FRONT, GL_AMBIENT, materialSecondary.ambient);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, materialSecondary.diffuse);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, materialSecondary.specular);
+		glMaterialf(GL_FRONT, GL_SHININESS, materialSecondary.shininess);
+	}
 
 	glBegin(GL_TRIANGLES);
 		for (int i=0; i<vertices.size(); i+=3) {
@@ -139,7 +172,44 @@ void Plane::DrawPlane() {
 		}
 	glEnd();
 
-	glEnable(GL_CULL_FACE);
+	// SHOW BOUNDING BOX
+	// glDisable(GL_LIGHTING); // disable lighting to allow flat green colour
+	// glBegin(GL_LINES);
+	// 	glColor3f(0.5, 1, 0.5);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+	// glEnd();
+	// glEnable(GL_LIGHTING);
+}
+
+void Plane::ExhibitPlane(int timerIn) {
+	glRotatef(-timerIn, 0, 1, 0);
+	glScalef(1.1, 1.1, 1.1);
 }
 
 void Plane::MovePlane() {
@@ -197,7 +267,10 @@ void Plane::LaunchPlane() {
 	fileout.close();
 }
 
-// returns cross product, used in CalculateSurfaceNormals
+int Plane::getID() {
+	return ID;
+}
+
 std::vector<float> Plane::getCoords() {
 	return pos;
 }
@@ -213,4 +286,23 @@ std::vector<float> Plane::getOrient() {
 
 float Plane::getPower() {
 	return power;
+}
+
+std::vector< std::vector<float> > Plane::getBoundFaceNorms() {
+	return faceNorms;
+}
+
+std::vector<float> Plane::getBoundFaceDists() {
+	std::vector<float> faceDists;
+
+	// distances are simply the bounding box coords
+	// max values are returned negative as required by ray-plane intersect equation
+	faceDists.push_back(boundMin[0]);
+	faceDists.push_back(boundMin[1]);
+	faceDists.push_back(boundMin[2]);
+	faceDists.push_back(-boundMax[0]);
+	faceDists.push_back(-boundMax[1]);
+	faceDists.push_back(-boundMax[2]);
+
+	return faceDists;
 }
