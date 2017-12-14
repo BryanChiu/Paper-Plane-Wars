@@ -62,6 +62,7 @@ void hitTimer(int value){
 
 
 void DrawPerson(){
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glColor3f(1,1,1);
 	//glEnable(GL_LIGHTING);
@@ -119,7 +120,7 @@ void DrawPerson(){
 void FloorMesh() {
 	//glEnable(GL_LIGHTING);
 	//glEnable(GL_LIGHT0);
-	glDisable(GL_LIGHTING);
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 	//material
@@ -137,7 +138,7 @@ void FloorMesh() {
 	for (int i=0; i>-100-1; i--) {
 		glBegin(GL_QUAD_STRIP);
 			for (int j=50; j>-50; j--) {
-				//glColor3f(0,1,0);
+				glNormal3f(0,1,0);
 				glVertex3f(j, 0, i);
 				glVertex3f(j, 0, i-1);
 			}
@@ -211,8 +212,7 @@ void display(void) {
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camTarget[0], camTarget[1], camTarget[2], 0,1,0);
 
-	FloorMesh();
-
+	
 	//check rotation between -90 and 90
 	if (bodyRotZ > 90){
 		bodyRotZ = 90;
@@ -220,8 +220,12 @@ void display(void) {
 	else if (bodyRotZ < -90){
 		bodyRotZ = -90;
 	}
+
+	glDisable(GL_LIGHTING);
 	DrawPerson();
 
+	glEnable(GL_LIGHTING);
+	FloorMesh();
 	//flush out to single buffer
 	glutSwapBuffers();
 }
