@@ -345,7 +345,7 @@ void initTextures(){
 		glGenTextures(2, textures);
 	
 		//load the texture (snail)
-		snail_tex = LoadPPM("snail_a.ppm", &width, &height, &maxi);
+		//snail_tex = LoadPPM("snail_a.ppm", &width, &height, &maxi);
 	
 		//setup first texture (using snail image)
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -357,7 +357,7 @@ void initTextures(){
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		
 		//create a texture using the "snail_tex" array data
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, snail_tex);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, snail_tex);
 
 		// //load the texture (fullHeart)
 		// fullHeart = LoadPPM("fullHeart.ppm", &width, &height, &max);
