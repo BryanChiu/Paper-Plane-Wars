@@ -46,23 +46,55 @@ float bodyRotX,bodyRotY,bodyRotZ = 0;
 //opponent rotation positions
 float oppRotX, oppRotY, oppRotZ = 0;
 
-//plane position 
-std::vector<float> planePos;
+float planePos[3];
+
 //hit player?
 bool hit = false;
+//should opp dodge?
+bool dodge = false;
+
+void dodgeTimer(int value){
+	if (dodge){
+		//change position to dodge plane
+		if(planePos[0] > 0){
+			if(oppRotZ<10){
+				oppRotZ++;
+			}
+			//else if(bodyRotX=10){
+			//	bodyRotX=0;
+			//	dodge = false;
+			//}
+		}
+	}
+	glutTimerFunc(20, dodgeTimer, 0);
+	glutPostRedisplay();
+}
+
+void hitTimer(int value){
+	if (hit){
+		if(bodyRotX<30){
+			bodyRotX++;
+		}
+		else if(bodyRotX=30){
+			bodyRotX=0;
+			hit = false;
+			//lose a life
+		}
+	}
+	glutTimerFunc(20, hitTimer, 0);
+	glutPostRedisplay();
+}
 
 void DrawOpponent(){
 	glDisable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glColor3f(1,1,1);
 	if(launchState==4){
-		printf("planePos[0] %f\n",planePos[0]);
-		printf("planePos[1] %f\n",planePos[1]);
-		printf("planePos[2] %f\n",planePos[2]);
-		//change position to dodge plane
-		//if(planePos[0] < 50){
-		//	oppRotZ = 90;
-		//}
+		std::vector<float> tempVec = PlaneList[3]->getCoords();
+		planePos[0]=tempVec[0];
+		planePos[1]=tempVec[1];
+		planePos[2]=tempVec[2];
+		dodge = true;
 	}
 	//glEnable(GL_LIGHTING);
 	glPushMatrix();//person position
@@ -125,7 +157,7 @@ void DrawPerson(){
 	glColor3f(1,1,1);
 	//glEnable(GL_LIGHTING);
 	glPushMatrix();//person position
-		glTranslatef(0,10,0);
+		glTranslatef(0,10,-30);
 		glPushMatrix(); //body and head and arms rotation
 			glRotatef(bodyRotX,1,0,0);
 			glRotatef(bodyRotY,0,1,0);		
@@ -203,20 +235,7 @@ void FloorMesh() {
 		glEnd();
 	}
 }
-void hitTimer(int value){
-	if (hit){
-		if(bodyRotX<30){
-			bodyRotX++;
-		}
-		else if(bodyRotX=30){
-			bodyRotX=0;
-			hit = false;
-			//lose a life
-		}
-	}
-	glutTimerFunc(20, hitTimer, 0);
-	glutPostRedisplay();
-}
+
 void LaunchSequence(std::vector<Plane*>::iterator obj) {
 	glDisable(GL_LIGHTING);
 	wheelTimer++;
@@ -556,15 +575,12 @@ void display(void) {
 
 				if (launchState != 0 && launchState != 4) {
 					LaunchSequence(it);
-					std::vector<float> tempVec = PlaneList[3]->getCoords();
-					for (int i=0; i<3; i++) {
-						planePos.push_back(tempVec[i]);
-					}
 				}
 
 				if ((*it)->inFlight) {
 					(*it)->MovePlane();
 				}
+				
 
 			glPopMatrix();
 		}
@@ -675,6 +691,7 @@ int main(int argc, char** argv)
 	//fps timer callback
 	glutTimerFunc(17, FPSTimer, 0);
 	glutTimerFunc(17, hitTimer, 0);
+	glutTimerFunc(17, dodgeTimer, 0);
 	
 
 	init();
