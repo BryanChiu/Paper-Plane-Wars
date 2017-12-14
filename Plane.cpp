@@ -76,7 +76,7 @@ bool Plane::LoadOBJ(const char * path, std::vector<float> &out_vertices, std::ve
 	FILE * file = fopen(path, "r");
 	if( file == NULL ){
 		printf("Impossible to open the file !\n");
-		return false;
+		exit(0);
 	}
 
 	while( 1 ){
@@ -151,7 +151,9 @@ bool Plane::LoadOBJ(const char * path, std::vector<float> &out_vertices, std::ve
 
 // render terrain
 void Plane::DrawPlane(bool active) {
+	glEnable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glCullFace(GL_BACK);
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, materialMain.ambient);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, materialMain.diffuse);
@@ -166,9 +168,12 @@ void Plane::DrawPlane(bool active) {
 	}
 
 	glBegin(GL_TRIANGLES);
+		int j=0;
 		for (int i=0; i<vertices.size(); i+=3) {
 			glNormal3f(normals[i], normals[i+1], normals[i+2]);
+			glTexCoord2f(uvs[j], uvs[j+1]);
 			glVertex3f(vertices[i], vertices[i+1], vertices[i+2]);
+			j+=2;
 		}
 	glEnd();
 

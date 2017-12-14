@@ -26,7 +26,11 @@
 #define W 3
 
 float camPos[] = {0, 35, 10};	//where the camera is
-float camTarget[] = {0, 34, 5};
+float camTarget[] = {0, 32, 0};
+
+GLubyte* image;
+GLuint textures[2];
+int width, height, max;
 
 std::vector<Plane*> PlaneList;
 int selectedPlane = -1; // selected object ID, -1 if nothing selected
@@ -41,60 +45,62 @@ double* m_start = new double[3]; // ray-casting coords
 double* m_end = new double[3];
 int _X, _Y;
 
-void FloorMesh() {
-	glDisable(GL_LIGHTING);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glCullFace(GL_BACK);
-	glLineWidth(1);
-
-	for (int i=0; i>-100-1; i--) {
-		glBegin(GL_QUAD_STRIP);
-			for (int j=50; j>-50; j--) {
-				glColor3f(0,0,0);
-				glVertex3f(j, 0, i);
-				glVertex3f(j, 0, i-1);
-			}
-		glEnd();
-	}
+GLubyte* LoadPPM(const char* file, int* width, int* height, int* max)
+{
+    GLubyte* img;
+    FILE *fd;
+    int n, m;
+    int  k, nm;
+    char c;
+    int i;
+    char b[100];
+    float s;
+    int red, green, blue;
+    
+    /* first open file and check if it's an ASCII PPM (indicated by P3 at the start) */
+    fd = fopen(file, "r");
+    fscanf(fd,"%[^\n] ",b);
+    if(b[0]!='P'|| b[1] != '3')
+    {
+        printf("%s is not a PPM file!\n",file);
+        exit(0);
+    }
+    fscanf(fd, "%c",&c);
+    
+    /* next, skip past the comments - any line starting with #*/
+    while(c == '#')
+    {
+        fscanf(fd, "%[^\n] ", b);
+        printf("%s\n",b);
+        fscanf(fd, "%c",&c);
+    }
+    ungetc(c,fd);
+    
+    /* now get the dimensions and max colour value from the image */
+    fscanf(fd, "%d %d %d", &n, &m, &k);
+    
+    /* calculate number of pixels and allocate storage for this */
+    nm = n*m;
+    img = (GLubyte*)malloc(3*sizeof(GLuint)*nm);
+    s=255.0/k;
+    
+    /* for every pixel, grab the read green and blue values, storing them in the image data array */
+    for(i=0;i<nm;i++)
+    {
+        fscanf(fd,"%d %d %d",&red, &green, &blue );
+        img[3*nm-3*i-3]=red*s;
+        img[3*nm-3*i-2]=green*s;
+        img[3*nm-3*i-1]=blue*s;
+    }
+    
+    /* finally, set the "return parameters" (width, height, max) and return the image array */
+    *width = n;
+    *height = m;
+    *max = k;
+    
+    return img;
 }
 
-void LaunchSequence(std::vector<Plane*>::iterator obj) {
-	glDisable(GL_LIGHTING);
-	wheelTimer++;
-	if (wheelTimer>50) {
-		wheelTimer = -50;
-	}
-
-	switch (launchState) {
-		case 1:
-			(*obj)->SetPitch(wheelTimer);
-			break;
-
-		case 2:
-			(*obj)->SetYaw(wheelTimer);
-			break;
-
-		case 3:
-			(*obj)->SetPower(wheelTimer);
-			break;
-	}
-
-	// Show launch vector
-	glLineWidth(5);
-	glBegin(GL_LINES);
-		glColor3f(0,0,0);
-		glVertex3f(0,0,3);
-		if (launchState==3) {
-			glVertex3f(0,0,(*obj)->getPower()*-20 + 5);
-		} else {
-			glVertex3f(0,0,-16);
-		}
-	glEnd();
-	glLineWidth(1);
-}
-
-//OpenGL functions
-//mouse
 void mouse(int btn, int state, int x, int y){
 	int centerX = glutGet(GLUT_WINDOW_WIDTH)/2;
 	int centerY = glutGet(GLUT_WINDOW_HEIGHT)/2;
@@ -339,16 +345,79 @@ void createOurMenu(){
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
-void display(void) {
+void FloorMesh() {
+	glDisable(GL_LIGHTING);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glCullFace(GL_BACK);
+	glLineWidth(1);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	for (int i=0; i>-100-1; i--) {
+		glBegin(GL_QUAD_STRIP);
+			for (int j=50; j>-50; j--) {
+				glColor3f(0,0,0);
+				glVertex3f(j, 0, i);
+				glVertex3f(j, 0, i-1);
+			}
+		glEnd();
+	}
+}
 
+void LaunchSequence(std::vector<Plane*>::iterator obj) {
+	glDisable(GL_LIGHTING);
+	wheelTimer++;
+	if (wheelTimer>50) {
+		wheelTimer = -50;
+	}
+
+	switch (launchState) {
+		case 1:
+			(*obj)->SetPitch(wheelTimer);
+			break;
+
+		case 2:
+			(*obj)->SetYaw(wheelTimer);
+			break;
+
+		case 3:
+			(*obj)->SetPower(wheelTimer);
+			break;
+	}
+
+	// Show launch vector
+	glLineWidth(5);
+	glBegin(GL_LINES);
+		glColor3f(0,0,0);
+		glVertex3f(0,0,3);
+		if (launchState==3) {
+			glVertex3f(0,0,(*obj)->getPower()*-20 + 5);
+		} else {
+			glVertex3f(0,0,-16);
+		}
+	glEnd();
+	glLineWidth(1);
+}
+
+void Prepare3D() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45, (float)((glutGet(GLUT_WINDOW_WIDTH)+0.0f)/glutGet(GLUT_WINDOW_HEIGHT)), 1, 300);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity(); 
+	// glDisable(GL_TEXTURE_2D);
+	glEnable(GL_TEXTURE_2D);
+}
+
+void Prepare2D() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, glutGet(GLUT_WINDOW_WIDTH), 0, glutGet(GLUT_WINDOW_HEIGHT));
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	glDisable(GL_LIGHTING);
+}
 
-	gluLookAt(camPos[0], camPos[1], camPos[2], camTarget[0], camTarget[1], camTarget[2], 0,1,0);
-
-	FloorMesh();
+void PrepareLaunch() {
+	// gluLookAt(camPos[0], camPos[1], camPos[2], camTarget[0], camTarget[1], camTarget[2], 0,1,0);
 
 	std::vector<float> IntersectList;
 
@@ -363,13 +432,20 @@ void display(void) {
 				glRotatef(rotateAngles[1], 0, 1, 0); // y-axis rotation (yaw)
 
 				glPushMatrix();
-					glCullFace(GL_BACK);
-					glEnable(GL_LIGHTING);
 					glPushMatrix();
-						if (highlight == (*it)->getID() && highlight<3) {
-							(*it)->ExhibitPlane(highlightTimer);
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+						if ((*it)->getID() == 3) {
+							(*it)->DrawPlane(true);
+						} else {
+							glScalef(0.9, 0.9, 0.9);
+							if (highlight == (*it)->getID() && highlight<3) {
+								(*it)->ExhibitPlane(highlightTimer);
+							}
+							(*it)->DrawPlane(highlight == (*it)->getID());
 						}
-						(*it)->DrawPlane(highlight == (*it)->getID());
 					glPopMatrix();
 
 					if (launchState==0) {
@@ -381,13 +457,9 @@ void display(void) {
 					}
 				glPopMatrix();
 
-				if (launchState != 0 && launchState != 4) {
+				if (launchState != 0) {
 					LaunchSequence(it);
 					
-				}
-
-				if ((*it)->inFlight) {
-					(*it)->MovePlane();
 				}
 
 			glPopMatrix();
@@ -397,7 +469,58 @@ void display(void) {
 	if (launchState==0) {
 		DetermineSelection(IntersectList);
 	}
+}
 
+void FollowPlane() {
+	gluLookAt(camPos[0], camPos[1], camPos[2], camTarget[0], camTarget[1], camTarget[2], 0,1,0);
+
+	PlaneList[3]->MovePlane();
+}
+
+void display(void) {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	Prepare3D();
+
+	gluLookAt(camPos[0], camPos[1], camPos[2], camTarget[0], camTarget[1], camTarget[2], 0,1,0);
+	FloorMesh();
+
+	if (launchState!=4) {
+
+		PrepareLaunch();
+
+	} else { // launchState == 4
+
+		FollowPlane();
+
+	}
+
+	glFlush();
+	Prepare2D();
+
+	glCullFace(GL_BACK);
+
+	// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+	// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	// glBegin(GL_QUADS);
+	// 	glColor3f(1,0,0);
+	// 	glTexCoord2f(0,0);
+	// 	glVertex2f(0, 0);
+	// 	glColor3f(1,1,0);
+	// 	glTexCoord2f(1,0);
+	// 	glVertex2f(500, 0);
+	// 	glColor3f(0,1,0);
+	// 	glTexCoord2f(1,1);
+	// 	glVertex2f(500, 500);
+	// 	glColor3f(0,0,1);
+	// 	glTexCoord2f(0,1);
+	// 	glVertex2f(0, 500);
+	// glEnd();
+
+	glFlush();
 	//flush out to single buffer
 	glutSwapBuffers();
 }
@@ -441,6 +564,12 @@ void init(void)
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambi0);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diff0);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, spec0);
+
+	glEnable(GL_TEXTURE_2D);
+    glGenTextures(2, textures);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	image = LoadPPM("papertex.ppm", &width, &height, &max);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 
 	for (int i=0; i<3; i++) {
 		Plane *newPlane = new Plane();
