@@ -30,17 +30,20 @@ float camTarget[] = {0, 34, 5};
 
 int launchState = 0; // 0=none, 1=pitch, 2=yaw, 3=power
 bool hit = false;
-
+int hearts = 3; //3,2,1,0 0->lose
 
 //an array for iamge data
 GLubyte* snail_tex;
+GLubyte* fullHeart;
 GLuint textures[2];
 int width, height, maxi;
 int CURRENT = 0;
 
 float bodyRotX,bodyRotY,bodyRotZ = 0;
 
+void loseLife(){
 
+}
 
 void hitTimer(int value){
 	if (hit){
@@ -50,6 +53,7 @@ void hitTimer(int value){
 		else if(bodyRotX=30){
 			bodyRotX=0;
 			hit = false;
+			loseLife();
 		}
 	}
 	glutTimerFunc(20, hitTimer, 0);
@@ -114,13 +118,12 @@ void DrawPerson(){
 
 void FloorMesh() {
 	glDisable(GL_LIGHTING);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glCullFace(GL_BACK);
-
 	for (int i=0; i>-100-1; i--) {
 		glBegin(GL_QUAD_STRIP);
 			for (int j=50; j>-50; j--) {
-				glColor3f(0,0,0);
+				glColor3f(0,1,0);
 				glVertex3f(j, 0, i);
 				glVertex3f(j, 0, i-1);
 			}
@@ -328,6 +331,7 @@ void initTextures(){
 	
 		//setup first texture (using snail image)
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
+
 		//set texture parameters
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
@@ -336,6 +340,19 @@ void initTextures(){
 		
 		//create a texture using the "snail_tex" array data
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, snail_tex);
+
+		// //load the texture (fullHeart)
+		// fullHeart = LoadPPM("fullHeart.ppm", &width, &height, &max);
+	
+		// //setup second texture (using marble image)
+		// glBindTexture(GL_TEXTURE_2D, textures[1]);
+		// //set texture parameters
+		// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		// //create a texture using the "tex" array
+		// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, fullHeart);
 		
 }
 
@@ -347,7 +364,7 @@ void FPSTimer(int value){ //60fps
 //initialization
 void init(void)
 {
-	glClearColor(0.9, 0.9, 0.9, 1);
+	glClearColor(0, 0, 1, 1);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
