@@ -41,6 +41,12 @@ double* m_start = new double[3]; // ray-casting coords
 double* m_end = new double[3];
 int _X, _Y;
 
+//textures
+GLubyte* img_bluePants;
+GLubyte* img_blackPants;
+GLuint textures[2];
+int width, height, max;
+
 //character body rotation positions
 float bodyRotX,bodyRotY,bodyRotZ = 0;
 //opponent rotation positions
@@ -52,6 +58,62 @@ float planePos[3];
 bool hit = false;
 //should opp dodge?
 bool dodge = false;
+
+GLubyte* LoadPPM(const char* file, int* width, int* height, int* max)
+{
+    GLubyte* img;
+    FILE *fd;
+    int n, m;
+    int  k, nm;
+    char c;
+    int i;
+    char b[100];
+    float s;
+    int red, green, blue;
+    
+    /* first open file and check if it's an ASCII PPM (indicated by P3 at the start) */
+    fd = fopen(file, "r");
+    fscanf(fd,"%[^\n] ",b);
+    if(b[0]!='P'|| b[1] != '3')
+    {
+        printf("%s is not a PPM file!\n",file);
+        exit(0);
+    }
+    fscanf(fd, "%c",&c);
+    
+    /* next, skip past the comments - any line starting with #*/
+    while(c == '#')
+    {
+        fscanf(fd, "%[^\n] ", b);
+        printf("%s\n",b);
+        fscanf(fd, "%c",&c);
+    }
+    ungetc(c,fd);
+    
+    /* now get the dimensions and max colour value from the image */
+    fscanf(fd, "%d %d %d", &n, &m, &k);
+    
+    /* calculate number of pixels and allocate storage for this */
+    nm = n*m;
+    img = (GLubyte*)malloc(3*sizeof(GLuint)*nm);
+    s=255.0/k;
+    
+    /* for every pixel, grab the read green and blue values, storing them in the image data array */
+    for(i=0;i<nm;i++)
+    {
+        fscanf(fd,"%d %d %d",&red, &green, &blue );
+        img[3*nm-3*i-3]=red*s;
+        img[3*nm-3*i-2]=green*s;
+        img[3*nm-3*i-1]=blue*s;
+    }
+    
+    /* finally, set the "return parameters" (width, height, max) and return the image array */
+    *width = n;
+    *height = m;
+    *max = k;
+    
+    return img;
+}
 
 void dodgeTimer(int value){
 	if (dodge){
@@ -114,7 +176,6 @@ void DrawOpponent(){
 	}
 	//glEnable(GL_LIGHTING);
 	glPushMatrix();//person position
-		//NEED TO TRANSLATE THIS SOMEWHERE BETTER
 		glTranslatef(0,3,-60);
 		glPushMatrix(); //body and head and arms rotation
 			glRotatef(oppRotX,1,0,0);
@@ -170,7 +231,9 @@ void DrawOpponent(){
 void DrawPerson(){
 	glDisable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glColor3f(1,1,1);
+
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	//glColor3f(1,1,1);
 	//glEnable(GL_LIGHTING);
 	glPushMatrix();//person position
 		glTranslatef(0,3,-30);
@@ -180,13 +243,13 @@ void DrawPerson(){
 			glRotatef(bodyRotZ,0,0,1);
 			glPushMatrix();//body size
 				glScalef(1,2,1);
-				glColor3f(1,0,0);
+				//glColor3f(1,0,0);
 				glutSolidCube(1);
 			glPopMatrix();//end body size
 			glPushMatrix();//head location
 				glScalef(0.75,0.75,0.75);
 				glTranslatef(0,2,0);
-				glColor3f(0.6,0.1,0.1);
+				//glColor3f(0.6,0.1,0.1);
 				glutSolidSphere(1,100,1000); 
 				//glBindTexture(GL_TEXTURE_2D, textures[CURRENT]);
 				//glutSolidTeapot(1);
@@ -194,13 +257,13 @@ void DrawPerson(){
 			glPushMatrix();//arm size
 				glScalef(0.5,2,0.5);
 				glPushMatrix(); //left arm position
-					glColor3f(1,0,0);
+					//glColor3f(1,0,0);
 					glTranslatef(-1.5,0,0);
 					glRotatef(0,0,0,1);
 					glutSolidCube(1);
 				glPopMatrix();//end left arm loc
 				glPushMatrix();//right arm loc
-					glColor3f(1,0,0);
+					//glColor3f(1,0,0);
 					glTranslatef(1.5,0,0);
 					glRotatef(0,0,0,1);
 					glutSolidCube(1);
@@ -209,17 +272,18 @@ void DrawPerson(){
 		glPopMatrix();//head and body and arms rotation
 		glPushMatrix();//legs size
 			glScalef(0.5,2,1);
+			//texture
 			glPushMatrix();//right leg location
-				glColor3f(0,0,1);
+				//glColor3f(0,0,1);
 				glTranslatef(0.5,-1,0);
 				glutSolidCube(1);
 			glPopMatrix();//end leg loc
 			glPushMatrix();//left leg location
-				glColor3f(0,0,1);
+				//glColor3f(0,0,1);
 				glTranslatef(-0.5,-1,0);
 				glutSolidCube(1);
 			glPopMatrix();//end leg loc
-		glPopMatrix();//end leg and arm size
+		glPopMatrix();//end legs size
 	glPopMatrix(); //end person loc
 }
 
@@ -562,8 +626,11 @@ void display(void) {
 	gluLookAt(camPos[0], camPos[1], camPos[2], camTarget[0], camTarget[1], camTarget[2], 0,1,0);
 
 	FloorMesh();
+
+	glEnable(GL_TEXTURE_2D);
 	DrawPerson();
 	DrawOpponent();
+	glDisable(GL_TEXTURE_2D);
 
 	std::vector<float> IntersectList;
 
@@ -664,6 +731,7 @@ void init(void)
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diff0);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, spec0);
 
+	
 	for (int i=0; i<3; i++) {
 		Plane *newPlane = new Plane();
 		char filename[] = "plane_1.obj";
@@ -682,6 +750,28 @@ void init(void)
 	m_end[X] = 0;
 	m_end[Y] = 0;
 	m_end[Z] = 0;
+}
+
+void initTextures(){
+	glEnable(GL_TEXTURE_2D);
+	glGenTextures(2, textures);
+
+	img_bluePants = LoadPPM("bluePants.ppm", &width, &height, &max);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_bluePants);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	
+	img_blackPants = LoadPPM("blackPants.ppm", &width, &height, &max);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_blackPants);
+	
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	
+	glMatrixMode(GL_TEXTURE);
+    glScalef(1,-1,-1);
 }
 
 /* main function - program entry point */
@@ -715,11 +805,11 @@ int main(int argc, char** argv)
 	glutTimerFunc(17, hitTimer, 0);
 	glutTimerFunc(17, dodgeTimer, 0);
 	
-
-	init();
-
 	createOurMenu();
+	init();
+	initTextures();
 
 	glutMainLoop();				//starts the event glutMainLoop
+	
 	return(0);					//return may not be necessary on all compilers
 }
