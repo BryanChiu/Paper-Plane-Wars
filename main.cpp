@@ -60,9 +60,9 @@ void DrawOpponent(){
 		printf("planePos[1] %f\n",planePos[1]);
 		printf("planePos[2] %f\n",planePos[2]);
 		//change position to dodge plane
-		if(planePos[0] < 50){
-			oppRotZ = 90;
-		}
+		//if(planePos[0] < 50){
+		//	oppRotZ = 90;
+		//}
 	}
 	//glEnable(GL_LIGHTING);
 	glPushMatrix();//person position
@@ -551,16 +551,15 @@ void display(void) {
 							IntersectList.push_back(intersection[0]);
 							IntersectList.push_back(intersection[1]);
 						}
-						std::vector<float> tempVec = PlaneList[2]->getCoords();
-						for (int i=0; i<3; i++) {
-							planePos.push_back(tempVec[i]);
-						}
 					}
 				glPopMatrix();
 
 				if (launchState != 0 && launchState != 4) {
 					LaunchSequence(it);
-					
+					std::vector<float> tempVec = PlaneList[3]->getCoords();
+					for (int i=0; i<3; i++) {
+						planePos.push_back(tempVec[i]);
+					}
 				}
 
 				if ((*it)->inFlight) {
