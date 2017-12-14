@@ -55,19 +55,32 @@ bool dodge = false;
 
 void dodgeTimer(int value){
 	if (dodge){
-
-		//change position to dodge plane
-		if(planePos[0] > 0){
-			if(oppRotZ<40){
-				oppRotZ++;
+		//change position to dodge plane according to x plane position
+		if(planePos[2] >= -70){
+			if(planePos[0] > 0){
+				if(oppRotZ<40){
+					oppRotZ++;
+				}
+			}
+			else if(planePos[0] < 0){
+				if(oppRotZ>-40){
+					oppRotZ--;
+				}
 			}
 		}
-		if(planePos[2] < -70){
-			for(int i=oppRotZ; i>0; i--){
+		//when far enough, z plane position, go back to standing
+		else if(planePos[2] < -70){
+			if(oppRotZ>0){
 				oppRotZ--;
 			}
-			oppRotZ = 0;
-			dodge = false;
+			else if(oppRotZ<0){
+				oppRotZ++;
+			}
+			else{
+				printf("hello");
+				dodge = false;
+			}
+			
 		}
 	}
 	glutTimerFunc(60, dodgeTimer, 0);
@@ -98,7 +111,6 @@ void DrawOpponent(){
 		planePos[0]=tempVec[0];
 		planePos[1]=tempVec[1];
 		planePos[2]=tempVec[2];
-		dodge = true;
 	}
 	//glEnable(GL_LIGHTING);
 	glPushMatrix();//person position
@@ -445,6 +457,11 @@ void keyboard(unsigned char key, int xIn, int yIn) {
 			}
 			wheelTimer = -30;
 			launchState = 0;
+			//reset all people rotations
+			bodyRotX,bodyRotY,bodyRotZ,oppRotX,oppRotY,oppRotZ=0;
+			//reset plane position vector
+			planePos[0], planePos[1], planePos[2] = 0;
+			dodge = false;
 			break;
 
 		case 'n':
@@ -480,6 +497,7 @@ void keyboard(unsigned char key, int xIn, int yIn) {
 					case 3: // power set, launches
 						wheelTimer = -30;
 						launchState = 4;
+						dodge = true;
 						PlaneList[3]->inFlight = true;
 						PlaneList[3]->LaunchPlane();
 						break;
