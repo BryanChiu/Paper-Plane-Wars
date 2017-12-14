@@ -56,19 +56,21 @@ bool dodge = false;
 void dodgeTimer(int value){
 	if (dodge){
 
-		printf("%d\n", planePos[0]);
 		//change position to dodge plane
 		if(planePos[0] > 0){
-			if(oppRotZ<10){
+			if(oppRotZ<40){
 				oppRotZ++;
 			}
 		}
-		if(planePos[2] < -60){
+		if(planePos[2] < -70){
+			for(int i=oppRotZ; i>0; i--){
+				oppRotZ--;
+			}
 			oppRotZ = 0;
 			dodge = false;
 		}
 	}
-	glutTimerFunc(20, dodgeTimer, 0);
+	glutTimerFunc(60, dodgeTimer, 0);
 	glutPostRedisplay();
 }
 
@@ -101,7 +103,7 @@ void DrawOpponent(){
 	//glEnable(GL_LIGHTING);
 	glPushMatrix();//person position
 		//NEED TO TRANSLATE THIS SOMEWHERE BETTER
-		glTranslatef(0,10,-60);
+		glTranslatef(0,3,-60);
 		glPushMatrix(); //body and head and arms rotation
 			glRotatef(oppRotX,1,0,0);
 			glRotatef(oppRotY,0,1,0);		
@@ -159,7 +161,7 @@ void DrawPerson(){
 	glColor3f(1,1,1);
 	//glEnable(GL_LIGHTING);
 	glPushMatrix();//person position
-		glTranslatef(0,10,-30);
+		glTranslatef(0,3,-30);
 		glPushMatrix(); //body and head and arms rotation
 			glRotatef(bodyRotX,1,0,0);
 			glRotatef(bodyRotY,0,1,0);		
