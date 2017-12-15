@@ -16,6 +16,7 @@ class Plane {
 		void SetPower(int timerIn);
 		void LaunchPlane();
 		void BlowPlane(float xin, float yin);
+		void Collision();
 
 		int getID();
 		std::vector<float> getCoords(); // return coords to translate plane's matrix
