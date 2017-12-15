@@ -5,7 +5,7 @@ Emily Ashworth (001402976),
 and Sharon Platkin (001316625).
 
 
-For our final project we have created a game where the player declares war on their opponent and strikes at them with the mighty paper airplane. After moving on from the welcome page, you must select the type of airplane you would like to throw. After making your selection you will throw your airplaneat your opponent with your chosen pitch, yaw and power (warning: they will attempt to dodge your throw). Your opponent will be firing on you as well so you have to be sure to use your controls to dodge incoming planes. You have three lives, if you lose them all you lose the game.
+For our final project we have created a game where the player declares war on their opponent and strikes at them with the mighty paper airplane. After moving on from the welcome page, you must select the type of airplane you would like to throw. After making your selection you will throw your airplane at your opponent with your chosen pitch, yaw and power (warning: they will attempt to dodge your throw). Your opponent will be firing on you as well so you have to be sure to use your controls to dodge incoming planes. You have three lives, if you lose them all you lose the war.
 
 Controls:
 
