@@ -12,6 +12,7 @@ class Human {
 		void DodgePlane(std::vector<float> planePos);
 		void TakeDamage();
 		void MoveHuman(float xin);
+		void ResetPos();
 
 		int getID();
 		std::vector<float> getCoords(); // return coords to translate plane's matrix

@@ -178,38 +178,38 @@ void Plane::DrawPlane(bool active) {
 	glEnd();
 
 	// SHOW BOUNDING BOX
-	glDisable(GL_LIGHTING); // disable lighting to allow flat green colour
-	glBegin(GL_LINES);
-		glColor3f(0.5, 1, 0.5);
-		glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
-		glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
-		glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
-		glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
-		glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
-		glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+	// glDisable(GL_LIGHTING); // disable lighting to allow flat green colour
+	// glBegin(GL_LINES);
+	// 	glColor3f(0.5, 1, 0.5);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
 
-		glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
-		glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
-		glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
-		glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
-		glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
-		glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
 
-		glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
-		glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
-		glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
-		glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
-		glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
-		glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+	// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
 
-		glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
-		glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
-		glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
-		glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
-		glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
-		glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
-	glEnd();
-	glEnable(GL_LIGHTING);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+	// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+	// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+	// glEnd();
+	// glEnable(GL_LIGHTING);
 }
 
 void Plane::ExhibitPlane(int timerIn) {

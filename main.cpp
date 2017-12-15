@@ -31,10 +31,18 @@
 float camPos[] = {0, 8, 10};	//where the camera is
 float camTarget[] = {0, 7, 0};
 
-GLubyte* image;
+GLubyte* image; // paper texture
 int width, height;
-GLubyte* image2;
+GLubyte* image2; // grass texture
 int width2, height2;
+
+GLubyte* image3; // you lose texture
+int width3, height3;
+
+GLubyte* heart; // heart textures
+int widthHeart, heightHeart;
+GLubyte* empty;
+int widthEmpty, heightEmpty;
 
 std::vector<Plane*> PlaneList;
 int selectedPlane = -1; // selected object ID, -1 if nothing selected
@@ -49,10 +57,10 @@ double* m_start = new double[3]; // ray-casting coords
 double* m_end = new double[3];
 int _X, _Y;
 
-Plane *CompPlane;
+Plane *CompPlane; // computer's plane
 
-Human *Player;
-Human *Computer;
+Human *Player; // player model
+Human *Computer; // computer model
 
 int stateTimer;
 
@@ -114,7 +122,7 @@ void mouse(int btn, int state, int x, int y){
 	int centerX = glutGet(GLUT_WINDOW_WIDTH)/2;
 	int centerY = glutGet(GLUT_WINDOW_HEIGHT)/2;
 
-	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN && gameState == 0){
+	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN && gameState == 0 && Player->getHealth()!=0){
 		select = true;
 		_X = x;
 		_Y = y;
@@ -215,11 +223,12 @@ void DetermineSelection(std::vector<float> IntersectList) {
 		highlight = PlaneList[minID]->getID();
 
 		if (select && (int)minID!=selectedPlane) {
-			selectedPlane = (int)minID;
-
-			while (PlaneList.size()>3) {
+			if (selectedPlane!=-1) {
 				PlaneList.pop_back();
 			}
+
+			selectedPlane = (int)minID;
+
 			Plane *newPlane = new Plane();
 			char filename[] = "plane_1.obj";
 			filename[6] = selectedPlane+'1';
@@ -275,6 +284,8 @@ void keyboard(unsigned char key, int xIn, int yIn) {
 			while (PlaneList.size()>3) {
 				PlaneList.pop_back();
 			}
+			Player = new Human();
+			Player->InitHuman(0, 0, 3, 10);
 			Computer = new Human();
 			Computer->InitHuman(1, 0, 3, -60);
 			selectedPlane = -1;
@@ -488,7 +499,6 @@ void Prepare3D() {
 	gluPerspective(45, (float)((glutGet(GLUT_WINDOW_WIDTH)+0.0f)/glutGet(GLUT_WINDOW_HEIGHT)), 1, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity(); 
-	// glDisable(GL_TEXTURE_2D);
 	glEnable(GL_TEXTURE_2D);
 }
 
@@ -499,6 +509,7 @@ void Prepare2D() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glDisable(GL_LIGHTING);
+	glEnable(GL_TEXTURE_2D);
 }
 
 void DrawEnvironment() {
@@ -519,7 +530,7 @@ void PrepareLaunch() {
 	std::vector<float> IntersectList;
 
 	for (std::vector<Plane*>::iterator it = PlaneList.begin(); it != PlaneList.end(); it++) {
-		if (gameState==0 || (*it)->getID()>=3) {
+		if (gameState==0 || (*it)->getID()==PlaneList.size()-1) {
 			glPushMatrix();
 				std::vector<float> translateCoords = (*it)->getCoords();
 				glTranslatef(translateCoords[0], translateCoords[1], translateCoords[2]);
@@ -702,7 +713,7 @@ void display(void) {
 		}
 	} else if (gameState==5) { // comp returns plane, player dodges
 		ControlPlayer();
-		
+
 		if (stateTimer==0) {
 			TestCollisionIn();
 		}
@@ -728,13 +739,15 @@ void display(void) {
 				CompPlane = new Plane();
 				char filename[] = "plane_1.obj";
 				filename[6] = PlaneList.size()%3+'1';
-				CompPlane->InitPlane(-1, filename, -0.001, 0, 3.5, -59, rand()%15+5, rand()%5+177.5);
+				CompPlane->InitPlane(-1, filename, -0.001, 0, 3.5, -59, rand()%7+5, rand()%4+178);
 				CompPlane->SetPower(4);
 				CompPlane->inFlight = true;
 				CompPlane->LaunchPlane();
 			} else if (gameState==6) {
 				gameState = 0; // restart round
 				selectedPlane = -1;
+				Player->ResetPos();
+				Computer->ResetPos();
 			}
 		}
 	}
@@ -744,26 +757,41 @@ void display(void) {
 
 	glCullFace(GL_BACK);
 
-	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, image2);
-	// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-	// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	for (int i=0; i<3; i++) {
+		if (Player->getHealth() > i) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, widthHeart, heightHeart, 0, GL_RGB, GL_UNSIGNED_BYTE, heart);
+		} else {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, widthEmpty, heightEmpty, 0, GL_RGB, GL_UNSIGNED_BYTE, empty);
+		}
 
-	// glBegin(GL_QUADS);
-	// 	glColor3f(1,0,0);
-	// 	glTexCoord2f(0,0);
-	// 	glVertex2f(0, 0);
-	// 	glColor3f(1,1,0);
-	// 	glTexCoord2f(1,0);
-	// 	glVertex2f(500, 0);
-	// 	glColor3f(0,1,0);
-	// 	glTexCoord2f(1,1);
-	// 	glVertex2f(500, 500);
-	// 	glColor3f(0,0,1);
-	// 	glTexCoord2f(0,1);
-	// 	glVertex2f(0, 500);
-	// glEnd();
+		glBegin(GL_QUADS);
+		 	glColor3f(1,1,1);
+		 	glTexCoord2f(0,0);
+		 	glVertex2f(i*40, 0);
+		 	glTexCoord2f(1,0);
+		 	glVertex2f(i*40+40, 0);
+		 	glTexCoord2f(1,1);
+		 	glVertex2f(i*40+40, 40);
+		 	glTexCoord2f(0,1);
+			glVertex2f(i*40, 40);
+		glEnd();
+	}
+
+	if (Player->getHealth() == 0) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width3, height3, 0, GL_RGB, GL_UNSIGNED_BYTE, image3);
+
+		glBegin(GL_QUADS);
+			glColor3f(1,1,1);
+			glTexCoord2f(0,0);
+			glVertex2f(300, 150);
+			glTexCoord2f(1,0);
+			glVertex2f(600, 150);
+			glTexCoord2f(1,1);
+			glVertex2f(600, 450);
+			glTexCoord2f(0,1);
+			glVertex2f(300, 450);
+		glEnd();
+	}
 
 	//flush out to single buffer
 	glutSwapBuffers();
@@ -820,9 +848,10 @@ void init(void)
 	glEnable(GL_TEXTURE_2D);
 
 	image = LoadPPM("papertex.ppm", &width, &height);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	image2 = LoadPPM("grass.ppm", &width2, &height2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, image2);
+	image3 = LoadPPM("youLose.ppm", &width3, &height3);
+	heart = LoadPPM("fullheart.ppm", &widthHeart, &heightHeart);
+	empty = LoadPPM("emptyheart.ppm", &widthEmpty, &heightEmpty);
 
 	for (int i=0; i<3; i++) {
 		Plane *newPlane = new Plane();

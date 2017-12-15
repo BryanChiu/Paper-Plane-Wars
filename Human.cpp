@@ -99,38 +99,38 @@ void Human::DrawHuman() {
 	glPopMatrix();//end leg and arm size
 
 	// SHOW BOUNDING BOX
-		glDisable(GL_LIGHTING); // disable lighting to allow flat green colour
-		glBegin(GL_LINES);
-			glColor3f(0.5, 1, 0.5);
-			glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
-			glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
-			glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
-			glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
-			glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
-			glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+		// glDisable(GL_LIGHTING); // disable lighting to allow flat green colour
+		// glBegin(GL_LINES);
+		// 	glColor3f(0.5, 1, 0.5);
+		// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+		// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+		// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+		// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+		// 	glVertex3f(boundMin[0], boundMin[1], boundMin[2]);
+		// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
 
-			glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
-			glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
-			glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
-			glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
-			glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
-			glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+		// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+		// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+		// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+		// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+		// 	glVertex3f(boundMin[0], boundMax[1], boundMax[2]);
+		// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
 
-			glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
-			glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
-			glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
-			glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
-			glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
-			glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
+		// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+		// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+		// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+		// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+		// 	glVertex3f(boundMax[0], boundMax[1], boundMin[2]);
+		// 	glVertex3f(boundMin[0], boundMax[1], boundMin[2]);
 
-			glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
-			glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
-			glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
-			glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
-			glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
-			glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
-		glEnd();
-		glEnable(GL_LIGHTING);
+		// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+		// 	glVertex3f(boundMax[0], boundMin[1], boundMin[2]);
+		// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+		// 	glVertex3f(boundMax[0], boundMax[1], boundMax[2]);
+		// 	glVertex3f(boundMax[0], boundMin[1], boundMax[2]);
+		// 	glVertex3f(boundMin[0], boundMin[1], boundMax[2]);
+		// glEnd();
+		// glEnable(GL_LIGHTING);
 }
 
 void Human::DodgePlane(std::vector<float> planePos) {
@@ -164,6 +164,11 @@ void Human::TakeDamage() {
 
 void Human::MoveHuman(float xin) {
 	pos[0]+=xin;
+}
+
+void Human::ResetPos() {
+	pos[0] = 0;
+	rot[2] = 0;
 }
 
 int Human::getID() {
