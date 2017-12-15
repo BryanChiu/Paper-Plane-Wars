@@ -590,7 +590,7 @@ void FollowPlane() {
 
 }
 
-void TestCollision() {
+void TestCollisionOut() {
 	std::vector<float> planePos = PlaneList[PlaneList.size()-1]->getCoords();
 	std::vector<float> planeBox = PlaneList[PlaneList.size()-1]->getBoundFaceDists();
 	planeBox[3] *= -1;
@@ -604,7 +604,6 @@ void TestCollision() {
 			if (planePos[2]+planeBox[2] < compPos[2]+compBox[5] && planePos[2]+planeBox[5] > compPos[2]+compBox[2]) {
 
 				// HIT //
-				Computer->TakeDamage();
 				PlaneList[PlaneList.size()-1]->Collision();
 				stateTimer = 100;
 			}
@@ -613,6 +612,33 @@ void TestCollision() {
 
 	if (planePos[1]<0) {
 		PlaneList[PlaneList.size()-1]->Collision();
+		stateTimer = 100;
+	}
+}
+
+void TestCollisionIn() {
+	std::vector<float> planePos = CompPlane->getCoords();
+	std::vector<float> planeBox = CompPlane->getBoundFaceDists();
+	planeBox[3] *= -1;
+	planeBox[4] *= -1;
+	planeBox[5] *= -1;
+	std::vector<float> playPos = Player->getCoords();
+	std::vector<float> playBox = Player->getHitBox();
+
+	if (planePos[0]+planeBox[0] < playPos[0]+playBox[3] && planePos[0]+planeBox[3] > playPos[0]+playBox[0]) {
+		if (planePos[1]+planeBox[1] < playPos[1]+playBox[4] && planePos[1]+planeBox[4] > playPos[1]+playBox[1]) {
+			if (planePos[2]+planeBox[2] < playPos[2]+playBox[5] && planePos[2]+planeBox[5] > playPos[2]+playBox[2]) {
+
+				// HIT //
+				Player->TakeDamage();
+				CompPlane->Collision();
+				stateTimer = 100;
+			}
+		}
+	}
+
+	if (planePos[1]<0) {
+		CompPlane->Collision();
 		stateTimer = 100;
 	}
 }
@@ -634,7 +660,6 @@ void ControlPlayer() {
 		CompPlane->DrawPlane(true);
 		CompPlane->MovePlane();
 	glPopMatrix();
-
 }
 
 void DisplayThrownPlanes() {
@@ -672,11 +697,15 @@ void display(void) {
 		FollowPlane();
 
 		if (stateTimer==0) {
-			TestCollision();
+			TestCollisionOut();
 			Computer->DodgePlane(PlaneList[PlaneList.size()-1]->getCoords());
 		}
 	} else if (gameState==5) { // comp returns plane, player dodges
 		ControlPlayer();
+		
+		if (stateTimer==0) {
+			TestCollisionIn();
+		}
 	}
 
 	glPushMatrix();
@@ -703,6 +732,9 @@ void display(void) {
 				CompPlane->SetPower(4);
 				CompPlane->inFlight = true;
 				CompPlane->LaunchPlane();
+			} else if (gameState==6) {
+				gameState = 0; // restart round
+				selectedPlane = -1;
 			}
 		}
 	}
