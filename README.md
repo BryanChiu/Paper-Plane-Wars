@@ -1,8 +1,8 @@
 # Paper-Plane-Wars
 by:
-Emily Ashworth, 001402976
-Sharon Platkin, 001316625
-Bryan Chiu, 400036252
+Emily Ashworth (001402976),
+Sharon Platkin (001316625),
+and Bryan Chiu (400036252).
 
 For our final project we have created a game where the player declares war on their oppenent and strikes at them with the mighty paper airplane. After moving on from the welcome page, you must select the type of airplane you would like to throw. After making your selection you will throw your airplane at your opponent (warning: they will attempt to dodge your throw). Your opponent will be firing on you as well so you have to be sure to use your controls to dodge incoming planes as well. Your hearts represent your life, if you lose all three you lose the game.
 
