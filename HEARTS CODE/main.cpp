@@ -19,21 +19,27 @@
 #endif
 
 #include "Plane.h"
+#include "Human.h"
 
 #define X 0
 #define Y 1
 #define Z 2
 #define W 3
 
-float camPos[] = {0, 35, 10};	//where the camera is
-float camTarget[] = {0, 34, 5};
+float camPos[] = {0, 8, 10};	//where the camera is
+float camTarget[] = {0, 7, 0};
+
+GLubyte* image;
+int width, height;
+GLubyte* image2;
+int width2, height2;
 
 std::vector<Plane*> PlaneList;
 int selectedPlane = -1; // selected object ID, -1 if nothing selected
 int highlight = -1;
 int highlightTimer = 0;
 
-int launchState = 0; // 0=none, 1=pitch, 2=yaw, 3=power, 4=inFlight
+int gameState = 0; // 0=none, 1=pitch, 2=yaw, 3=power, 4=inFlight
 int wheelTimer;
 
 bool select = false;
@@ -41,27 +47,10 @@ double* m_start = new double[3]; // ray-casting coords
 double* m_end = new double[3];
 int _X, _Y;
 
-//textures
-GLubyte* img_bluePants;
-GLubyte* img_blackPants;
-GLuint textures[2];
-int width1, height1, max1;
-int width2, height2, max2;
+Human *Player;
+Human *Computer;
 
-//character body rotation positions
-float bodyRotX,bodyRotY,bodyRotZ = 0;
-//opponent rotation positions
-float oppRotX, oppRotY, oppRotZ = 0;
-
-float planePos[3];
-
-//hit player?
-bool hit = false;
-//should opp dodge?
-bool dodge = false;
-
-GLubyte* LoadPPM(const char* file, int* width, int* height, int* max)
-{
+GLubyte* LoadPPM(const char* file, int* width, int* height) {
     GLubyte* img;
     FILE *fd;
     int n, m;
@@ -111,269 +100,15 @@ GLubyte* LoadPPM(const char* file, int* width, int* height, int* max)
     /* finally, set the "return parameters" (width, height, max) and return the image array */
     *width = n;
     *height = m;
-    *max = k;
     
     return img;
 }
 
-void dodgeTimer(int value){
-	if (dodge){
-		//change position to dodge plane according to x plane position
-		if(planePos[2] >= -70){
-			if(planePos[0] > 0){
-				if(oppRotZ<40){
-					oppRotZ++;
-				}
-			}
-			else if(planePos[0] < 0){
-				if(oppRotZ>-40){
-					oppRotZ--;
-				}
-			}
-		}
-		//when far enough, z plane position, go back to standing
-		else if(planePos[2] < -70){
-			if(oppRotZ>0){
-				oppRotZ--;
-			}
-			else if(oppRotZ<0){
-				oppRotZ++;
-			}
-			else{
-				dodge = false;
-			}
-			
-		}
-	}
-	glutTimerFunc(60, dodgeTimer, 0);
-	glutPostRedisplay();
-}
-
-void hitTimer(int value){
-	if (hit){
-		if(bodyRotX<30){
-			bodyRotX++;
-		}
-		else if(bodyRotX=30){
-			bodyRotX=0;
-			hit = false;
-			//lose a life
-		}
-	}
-	glutTimerFunc(20, hitTimer, 0);
-	glutPostRedisplay();
-}
-
-void DrawOpponent(){
-	glDisable(GL_LIGHTING);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glColor3f(1,1,1);
-	if(launchState==4){
-		std::vector<float> tempVec = PlaneList[3]->getCoords();
-		planePos[0]=tempVec[0];
-		planePos[1]=tempVec[1];
-		planePos[2]=tempVec[2];
-	}
-	//glEnable(GL_LIGHTING);
-	glPushMatrix();//person position
-		glTranslatef(0,3,-60);
-		glPushMatrix(); //body and head and arms rotation
-			glRotatef(oppRotX,1,0,0);
-			glRotatef(oppRotY,0,1,0);		
-			glRotatef(oppRotZ,0,0,1);
-			glPushMatrix();//body size
-				glScalef(1,2,1);
-				glColor3f(0,1,0);
-				glutSolidCube(1);
-			glPopMatrix();//end body size
-			glPushMatrix();//head location
-				glScalef(0.75,0.75,0.75);
-				glTranslatef(0,2,0);
-				glColor3f(0.6,0.1,0.1);
-				glutSolidSphere(1,100,1000); 
-				//glBindTexture(GL_TEXTURE_2D, textures[CURRENT]);
-				//glutSolidTeapot(1);
-			glPopMatrix();//end head loc
-			glPushMatrix();//arm size
-				glScalef(0.5,2,0.5);
-				glPushMatrix(); //left arm position
-					glColor3f(0,1,0);
-					glTranslatef(-1.5,0,0);
-					glRotatef(0,0,0,1);
-					glutSolidCube(1);
-				glPopMatrix();//end left arm loc
-				glPushMatrix();//right arm loc
-					glColor3f(0,1,0);
-					glTranslatef(1.5,0,0);
-					glRotatef(0,0,0,1);
-					glutSolidCube(1);
-				glPopMatrix();//end right arm loc
-			glPopMatrix();//end arm size
-		glPopMatrix();//head and body and arms rotation
-		glPushMatrix();//legs size
-			glScalef(0.5,2,1);
-			glPushMatrix();//right leg location
-				glColor3f(0,0,0);
-				glTranslatef(0.5,-1,0);
-				glutSolidCube(1);
-			glPopMatrix();//end leg loc
-			glPushMatrix();//left leg location
-				glColor3f(0,0,0);
-				glTranslatef(-0.5,-1,0);
-				glutSolidCube(1);
-			glPopMatrix();//end leg loc
-		glPopMatrix();//end leg and arm size
-	glPopMatrix(); //end person loc
-}
-
-
-
-void DrawPerson(){
-	glDisable(GL_LIGHTING);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glColor3f(1,1,1);
-	glPushMatrix();//person position
-		glTranslatef(0,3,-30);
-		glPushMatrix(); //body and head and arms rotation
-			glRotatef(bodyRotX,1,0,0);
-			glRotatef(bodyRotY,0,1,0);		
-			glRotatef(bodyRotZ,0,0,1);
-			glPushMatrix();//body size
-				glScalef(1,2,1);
-				glColor3f(1,0,0);
-				glutSolidCube(1);
-			glPopMatrix();//end body size
-			glPushMatrix();//head location
-				glScalef(0.75,0.75,0.75);
-				glTranslatef(0,2,0);
-				glColor3f(0.6,0.1,0.1);
-				glutSolidSphere(1,100,1000); 
-			glPopMatrix();//end head loc
-			glPushMatrix();//arm size
-				glScalef(0.5,2,0.5);
-				glPushMatrix(); //left arm position
-					glColor3f(1,0,0);
-					glTranslatef(-1.5,0,0);
-					glRotatef(0,0,0,1);
-					glutSolidCube(1);
-				glPopMatrix();//end left arm loc
-				glPushMatrix();//right arm loc
-					glColor3f(1,0,0);
-					glTranslatef(1.5,0,0);
-					glRotatef(0,0,0,1);
-					glutSolidCube(1);
-				glPopMatrix();//end right arm loc
-			glPopMatrix();//end arm size
-		glPopMatrix();//head and body and arms rotation
-		glPushMatrix();//legs size
-			glScalef(0.5,2,1);
-			glColor3f(0,0,1);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, img_blackPants);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			
-			glPushMatrix();//right leg location
-				glTranslatef(0.5,-1,0);
-				glutSolidCube(1);
-			glPopMatrix();//end leg loc
-			glPushMatrix();//left leg location
-				glTranslatef(-0.5,-1,0);
-				glutSolidCube(1);
-			glPopMatrix();//end leg loc
-		glPopMatrix();//end legs size
-	glPopMatrix(); //end person loc
-}
-
-void FloorMesh() {
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glCullFace(GL_BACK);
-	glLineWidth(1);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	
-	//material
-	float m_amb0[4] = {0.0,0.05,0.0,1}; //ambient light
-	float m_diff0[3] = {0.4,0.5,0.4}; //shadows casting
-	float m_spec0[3] = {0.04,0.7,0.04};
-	float shine = 0.078125;
-	
-    glMaterialfv(GL_FRONT,GL_AMBIENT,m_amb0);
-    glMaterialfv(GL_FRONT,GL_DIFFUSE,m_diff0);
-	glMaterialfv(GL_FRONT,GL_SPECULAR,m_spec0);
-	glMaterialf(GL_FRONT, GL_SHININESS, shine * 128.0);
-
-	for (int i=0; i>-100-1; i--) {
-		glBegin(GL_QUAD_STRIP);
-			for (int j=50; j>-50; j--) {
-				glColor3f(0,0,0);
-				glVertex3f(j, 0, i);
-				glVertex3f(j, 0, i-1);
-			}
-		glEnd();
-	}
-}
-
-void DrawTree(int posX, int posZ){
-	glDisable(GL_LIGHTING);
-	glPushMatrix();
-		glTranslatef(posX,6,posZ);
-		glPushMatrix();
-			glRotatef(90,1,0,0);
-			glColor3f(0.5,0.2,0.2);	
-			gluCylinder(gluNewQuadric(),1,1,6,100,10);
-		glPopMatrix();
-		glTranslatef(0,5,0);
-		glRotatef(90,1,0,0);
-		glColor3f(0,0.7,0.2);	
-		gluCylinder(gluNewQuadric(),0.1,4,7,100,10);
-	glPopMatrix();
-}
-
-void LaunchSequence(std::vector<Plane*>::iterator obj) {
-	glDisable(GL_LIGHTING);
-	wheelTimer++;
-	if (wheelTimer>50) {
-		wheelTimer = -50;
-	}
-
-	switch (launchState) {
-		case 1:
-			(*obj)->SetPitch(wheelTimer);
-			break;
-
-		case 2:
-			(*obj)->SetYaw(wheelTimer);
-
-			break;
-
-		case 3:
-			(*obj)->SetPower(wheelTimer);
-			break;
-	}
-
-	// Show launch vector
-	glLineWidth(5);
-	glBegin(GL_LINES);
-		glColor3f(0,0,0);
-		glVertex3f(0,0,3);
-		if (launchState==3) {
-			glVertex3f(0,0,(*obj)->getPower()*-20 + 5);
-		} else {
-			glVertex3f(0,0,-16);
-		}
-	glEnd();
-	glLineWidth(1);
-}
-
-//OpenGL functions
-//mouse
 void mouse(int btn, int state, int x, int y){
 	int centerX = glutGet(GLUT_WINDOW_WIDTH)/2;
 	int centerY = glutGet(GLUT_WINDOW_HEIGHT)/2;
 
-	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN && launchState == 0){
+	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN && gameState == 0){
 		select = true;
 		_X = x;
 		_Y = y;
@@ -482,7 +217,7 @@ void DetermineSelection(std::vector<float> IntersectList) {
 			Plane *newPlane = new Plane();
 			char filename[] = "plane_1.obj";
 			filename[6] = selectedPlane+'1';
-			newPlane->InitPlane(PlaneList.size(), filename, -0.001, 0, 32, 0, 0, 0);
+			newPlane->InitPlane(PlaneList.size(), filename, -0.001, 0, 5, 0, 0, 0);
 			PlaneList.push_back(newPlane);
 		}
 	} else { 
@@ -499,7 +234,7 @@ void mouseMotion(int x, int y){
 }
 
 void mousePassiveMotion(int x, int y){
-	if (launchState==0) {
+	if (gameState==0) {
 		_X = x;
 		_Y = y;
 	}
@@ -534,49 +269,34 @@ void keyboard(unsigned char key, int xIn, int yIn) {
 			if (PlaneList.size()>3) {
 				PlaneList.pop_back();
 			}
+			Computer = new Human();
+			Computer->InitHuman(1, 0, 3, -60);
+			selectedPlane = -1;
 			wheelTimer = -30;
-			launchState = 0;
-			//reset all people rotations
-			bodyRotX,bodyRotY,bodyRotZ,oppRotX,oppRotY,oppRotZ=0;
-			//reset plane position vector
-			planePos[0], planePos[1], planePos[2] = 0;
-			dodge = false;
+			gameState = 0;
 			break;
-
-		case 'n':
-			bodyRotZ-=1;
-			break;
-
-		case 'm':
-			bodyRotZ+=1;
-			break;
-		
-		case '0': //get hit
-			hit = true;
-			break;	
 
 		case ' ':
 			if (PlaneList.size()==4) {
-				switch (launchState) {
+				switch (gameState) {
 					case 0: // starts aiming process
 						wheelTimer = 0;
-						launchState = 1;
+						gameState = 1;
 						break;
 
 					case 1: // pitch set
 						wheelTimer = 25;
-						launchState = 2;
+						gameState = 2;
 						break;
 
 					case 2: // yaw set
 						wheelTimer = -30;
-						launchState = 3;
+						gameState = 3;
 						break;
 
 					case 3: // power set, launches
 						wheelTimer = -30;
-						launchState = 4;
-						dodge = true;
+						gameState = 4;
 						PlaneList[3]->inFlight = true;
 						PlaneList[3]->LaunchPlane();
 						break;
@@ -587,26 +307,24 @@ void keyboard(unsigned char key, int xIn, int yIn) {
 }
 
 void special(int key, int xIn, int yIn){
-	switch (key){
-		case GLUT_KEY_DOWN:
-			camTarget[Y]-=0.2f;
-			camPos[Y]-=0.2f;
-			break;
+	if (gameState==4) {
+		switch (key){
+			case GLUT_KEY_DOWN:
+				PlaneList[3]->BlowPlane(0,-0.001);
+				break;
 
-		case GLUT_KEY_UP:
-			camTarget[Y]+=0.2f;
-			camPos[Y]+=0.2f;			
-			break;
+			case GLUT_KEY_UP:
+				PlaneList[3]->BlowPlane(0,0.001);			
+				break;
 
-		case GLUT_KEY_LEFT:
-			camTarget[X]-=0.2f;
-			camPos[X]-=0.2f;
-			break;
+			case GLUT_KEY_LEFT:
+				PlaneList[3]->BlowPlane(-0.001, 0);
+				break;
 
-		case GLUT_KEY_RIGHT:
-			camTarget[X]+=0.2f;
-			camPos[X]+=0.2f;
-			break;
+			case GLUT_KEY_RIGHT:
+				PlaneList[3]->BlowPlane(0.001, 0);
+				break;
+		}
 	}
 }
 
@@ -631,49 +349,167 @@ void createOurMenu(){
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
-void display(void) {
+void FloorMesh() {
+	glDisable(GL_LIGHTING);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glCullFace(GL_BACK);
+	glLineWidth(1);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	for (int i=0; i>-100-1; i--) {
+		glBegin(GL_QUAD_STRIP);
+			for (int j=50; j>-50; j--) {
+				glColor3f(0,0,0);
+				glVertex3f(j, 0, i);
+				glVertex3f(j, 0, i-1);
+			}
+		glEnd();
+	}
+}
 
+void DrawTree(int posX, int posZ){
+	glEnable(GL_LIGHTING);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glPushMatrix();
+		glTranslatef(posX,6,posZ);
+		glPushMatrix();
+			glRotatef(90,1,0,0);
+			glColor3f(0.5,0.2,0.2);	
+
+			float wood_ambi[4] = {0.2,0.08,0.0,1}; //ambient light
+			float wood_diff[3] = {0.5, 0.3,0.1}; //shadows casting
+			float wood_spec[3] = {0.7,0.4,0.04};
+			float wood_shin = 0.078125;
+		    glMaterialfv(GL_FRONT, GL_AMBIENT, wood_ambi);
+		    glMaterialfv(GL_FRONT, GL_DIFFUSE, wood_diff);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, wood_spec);
+			glMaterialf(GL_FRONT, GL_SHININESS, wood_shin * 128.0);
+
+			gluCylinder(gluNewQuadric(),1,1,6,100,10);
+		glPopMatrix();
+
+		glTranslatef(0,5,0);
+		glRotatef(90,1,0,0);
+		glColor3f(0,0.7,0.2);
+
+		
+		float leaf_ambi[4] = {0.0,0.3,0.0,1}; //ambient light
+		float leaf_diff[3] = {0.1,0.9,0.1}; //shadows casting
+		float leaf_spec[3] = {0.04,0.04,0.04};
+		float leaf_shin = 0.078125;
+		
+	    glMaterialfv(GL_FRONT, GL_AMBIENT, leaf_ambi);
+	    glMaterialfv(GL_FRONT, GL_DIFFUSE, leaf_diff);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, leaf_spec);
+		glMaterialf(GL_FRONT, GL_SHININESS, leaf_shin * 128.0);
+
+		gluCylinder(gluNewQuadric(),0.1, 1, 2, 20, 20);
+		gluCylinder(gluNewQuadric(),0.1, 1.5, 3.75, 20, 20);
+		gluCylinder(gluNewQuadric(),0.1, 2, 5.75, 20, 20);
+		gluCylinder(gluNewQuadric(),0.1, 2.5, 8, 20, 20);
+	glPopMatrix();
+}
+
+void LaunchSequence(std::vector<Plane*>::iterator obj) {
+	glDisable(GL_LIGHTING);
+	wheelTimer++;
+	if (wheelTimer>50) {
+		wheelTimer = -50;
+	}
+
+	switch (gameState) {
+		case 1:
+			(*obj)->SetPitch(wheelTimer);
+			break;
+
+		case 2:
+			(*obj)->SetYaw(wheelTimer);
+			break;
+
+		case 3:
+			(*obj)->SetPower(wheelTimer);
+			break;
+	}
+
+	// Show launch vector
+	glLineWidth(5);
+	glBegin(GL_QUADS);
+		glColor3f(0,0,0);
+		glVertex3f(0,0,0);
+		if (gameState==3) {
+			glVertex3f(0.5,0,(*obj)->getPower()*-16 + 3.5);
+			glVertex3f(0,0,(*obj)->getPower()*-20 + 3.5);
+			glVertex3f(-0.5,0,(*obj)->getPower()*-16 + 3.5);
+		} else {
+			glVertex3f(0.5,0,-12.8);
+			glVertex3f(0,0,-16);
+			glVertex3f(-0.5,0,-12.8);
+		}
+	glEnd();
+	glLineWidth(1);
+}
+
+void Prepare3D() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45, (float)((glutGet(GLUT_WINDOW_WIDTH)+0.0f)/glutGet(GLUT_WINDOW_HEIGHT)), 1, 300);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity(); 
+	// glDisable(GL_TEXTURE_2D);
+	glEnable(GL_TEXTURE_2D);
+}
+
+void Prepare2D() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, glutGet(GLUT_WINDOW_WIDTH), 0, glutGet(GLUT_WINDOW_HEIGHT));
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	glDisable(GL_LIGHTING);
+}
 
+void PrepareLaunch() {
 	gluLookAt(camPos[0], camPos[1], camPos[2], camTarget[0], camTarget[1], camTarget[2], 0,1,0);
 
 	FloorMesh();
-
-	DrawPerson();
-	DrawOpponent();
-	DrawTree(0,-10); //params xpos, zpos
+	DrawTree(10,-80); //params xpos, zpos
 	DrawTree(-30,-15);
 	DrawTree(-47,-10);
 	DrawTree(-47,-94);
 	DrawTree(47,-94);
 	DrawTree(40,-50);
 
-
 	std::vector<float> IntersectList;
 
 	for (std::vector<Plane*>::iterator it = PlaneList.begin(); it != PlaneList.end(); it++) {
-		if (launchState==0 || (*it)->getID()>=3) {
+		if (gameState==0 || (*it)->getID()>=3) {
 			glPushMatrix();
 				std::vector<float> translateCoords = (*it)->getCoords();
 				glTranslatef(translateCoords[0], translateCoords[1], translateCoords[2]);
+
 				std::vector<float> rotateAngles = (*it)->getOrient();
 				glRotatef(rotateAngles[0], 1, 0, 0); // x-axis rotation (pitch)
 				glRotatef(rotateAngles[1], 0, 1, 0); // y-axis rotation (yaw)
 
 				glPushMatrix();
-					glCullFace(GL_BACK);
-					glEnable(GL_LIGHTING);
 					glPushMatrix();
-						if (highlight == (*it)->getID() && highlight<3) {
-							(*it)->ExhibitPlane(highlightTimer);
+						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+						if ((*it)->getID() == 3) {
+							(*it)->DrawPlane(true);
+						} else {
+							glScalef(0.75, 0.75, 0.75);
+							if (highlight == (*it)->getID() && highlight<3) {
+								(*it)->ExhibitPlane(highlightTimer);
+							}
+							(*it)->DrawPlane(highlight == (*it)->getID());
 						}
-						(*it)->DrawPlane(highlight == (*it)->getID());
 					glPopMatrix();
 
-					if (launchState==0) {
+					if (gameState==0) {
 						std::vector<float> intersection = RayTest((*it)->getID(), it);
 						if (intersection.size() != 0) {
 							IntersectList.push_back(intersection[0]);
@@ -682,30 +518,122 @@ void display(void) {
 					}
 				glPopMatrix();
 
-				if (launchState != 0 && launchState != 4) {
+				if (gameState != 0) {
 					LaunchSequence(it);
+					
 				}
-
-				if ((*it)->inFlight) {
-					(*it)->MovePlane();
-				}
-				
 
 			glPopMatrix();
 		}
 	}
 
-	if (launchState==0) {
+	if (gameState==0) {
 		DetermineSelection(IntersectList);
 	}
+}
 
-	//check rotation between -60 and 60
-	if (bodyRotZ > 60){
-		bodyRotZ = 60;
+void FollowPlane() {
+	std::vector<float> translateCoords = PlaneList[3]->getCoords();
+	gluLookAt(translateCoords[0], translateCoords[1]+3, translateCoords[2]+10, translateCoords[0], translateCoords[1]+2, translateCoords[2], 0,1,0);
+
+	FloorMesh();
+
+	glPushMatrix();
+		glTranslatef(translateCoords[0], translateCoords[1], translateCoords[2]);
+		std::vector<float> rotateAngles = PlaneList[3]->getOrient();
+		glRotatef(rotateAngles[0], 1, 0, 0); // x-axis rotation (pitch)
+		glRotatef(rotateAngles[1], 0, 1, 0); // y-axis rotation (yaw)
+		glRotatef(rotateAngles[2], 0, 0, 1); // z-axis rotation (yaw)
+
+		glPushMatrix();
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			PlaneList[3]->DrawPlane(true);
+		glPopMatrix();
+	glPopMatrix();
+	
+	PlaneList[3]->MovePlane();
+}
+
+void display(void) {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	Prepare3D();	
+
+	if (gameState!=4) {
+		PrepareLaunch();
+	} else { // gameState == 4
+		FollowPlane();
+		Computer->DodgePlane(PlaneList[3]->getCoords());
 	}
-	else if (bodyRotZ < -60){
-		bodyRotZ = -60;
-	}
+
+	glPushMatrix();
+		Player->DrawHuman();
+	glPopMatrix();
+	glPushMatrix();
+		Computer->DrawHuman();
+	glPopMatrix();
+
+	glFlush();
+	Prepare2D();
+
+	glCullFace(GL_BACK);
+	//if statement here for empty or full heart
+	 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, image2);
+	 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+	 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	 glBegin(GL_QUADS);
+	 	glScalef(0.1,0.1,0.1);
+	 	glColor3f(1,1,1);
+	 	glTexCoord2f(0,0);
+	 	glVertex2f(0, 0);
+ 		glColor3f(1,1,1);
+	 	glTexCoord2f(1,0);
+	 	glVertex2f(40, 0);
+	 	glColor3f(1,1,1);
+	 	glTexCoord2f(1,1);
+	 	glVertex2f(40, 40);
+	 	glColor3f(1,1,1);
+	 	glTexCoord2f(0,1);
+		 glVertex2f(0, 40);
+	 glEnd();
+
+	 glBegin(GL_QUADS);
+		glScalef(0.1,0.1,0.1);
+		glColor3f(1,1,1);
+		glTexCoord2f(0,0);
+		glVertex2f(40, 0);
+		glColor3f(1,1,1);
+		glTexCoord2f(1,0);
+		glVertex2f(80, 0);
+		glColor3f(1,1,1);
+		glTexCoord2f(1,1);
+		glVertex2f(80, 40);
+		glColor3f(1,1,1);
+		glTexCoord2f(0,1);
+		glVertex2f(40, 40);
+	glEnd();
+
+	glBegin(GL_QUADS);
+		glScalef(0.1,0.1,0.1);
+		glColor3f(1,1,1);
+		glTexCoord2f(0,0);
+		glVertex2f(80, 0);
+		glColor3f(1,1,1);
+		glTexCoord2f(1,0);
+		glVertex2f(120, 0);
+		glColor3f(1,1,1);
+		glTexCoord2f(1,1);
+		glVertex2f(120, 40);
+		glColor3f(1,1,1);
+		glTexCoord2f(0,1);
+		glVertex2f(80, 40);
+	glEnd();
 
 	//flush out to single buffer
 	glutSwapBuffers();
@@ -729,7 +657,7 @@ void FPSTimer(int value){ //60fps
 //initialization
 void init(void)
 {
-	glClearColor(0.9, 0.9, 0.9, 1);
+	glClearColor(0.65, 0.65, 1.0, 1);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -741,7 +669,7 @@ void init(void)
 	glEnable(GL_LIGHT0);
 	glShadeModel(GL_SMOOTH);
 
-	float lPos0[4] = {2, 2, 0, 0};
+	float lPos0[4] = {0, 1, 0, 0};
 	float ambi0[4] = {0.9, 0.9, 0.9, 1};
 	float diff0[4] = {0.9, 0.9, 0.9, 1};
 	float spec0[4] = {0.1, 0.1, 0.1, 0};
@@ -751,16 +679,35 @@ void init(void)
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diff0);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, spec0);
 
-	
+	float density = 0.005;
+	float fogColor[4] = {0.5, 0.5, 0.5, 1};
+
+	glEnable(GL_FOG);
+	glFogi(GL_FOG_MODE, GL_EXP2);
+	glFogfv(GL_FOG_COLOR, fogColor);
+	glFogf(GL_FOG_DENSITY, density);
+	glHint(GL_FOG_HINT, GL_NICEST);
+	glEnable(GL_TEXTURE_2D);
+
+	image = LoadPPM("papertex.ppm", &width, &height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	image2 = LoadPPM("emptyHeart.ppm", &width2, &height2);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, image2);
+
 	for (int i=0; i<3; i++) {
 		Plane *newPlane = new Plane();
 		char filename[] = "plane_1.obj";
 		filename[6] = i+'1';
-		newPlane->InitPlane(PlaneList.size(), filename, -0.001, i*4-4, 30, 0, 0, 0);
+		newPlane->InitPlane(PlaneList.size(), filename, -0.001, i*3.5-3.5, 3.5, 0.5, 0, 0);
 		PlaneList.push_back(newPlane);
 	}
 
 	remove("launchdata.txt");
+
+	Player = new Human();
+	Player->InitHuman(0, 0, 3, 15);
+	Computer = new Human();
+	Computer->InitHuman(1, 0, 3, -60);
 
 	// ray-casting infos
 	m_start[X] = 0;
@@ -770,18 +717,6 @@ void init(void)
 	m_end[X] = 0;
 	m_end[Y] = 0;
 	m_end[Z] = 0;
-}
-
-void initTextures(){
-	glEnable(GL_TEXTURE_2D);
-
-	img_bluePants = LoadPPM("bluePants.ppm", &width1, &height1, &max1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, img_bluePants);
-	
-	
-	img_blackPants = LoadPPM("blackPants.ppm", &width2, &height2, &max2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, img_blackPants);
-	
 }
 
 /* main function - program entry point */
@@ -812,13 +747,10 @@ int main(int argc, char** argv)
 
 	//fps timer callback
 	glutTimerFunc(17, FPSTimer, 0);
-	glutTimerFunc(17, hitTimer, 0);
-	glutTimerFunc(17, dodgeTimer, 0);
-	
-	createOurMenu();
+
 	init();
-	initTextures();
-	
+
+	createOurMenu();
 
 	glutMainLoop();				//starts the event glutMainLoop
 	return(0);					//return may not be necessary on all compilers
