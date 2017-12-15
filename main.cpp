@@ -139,7 +139,6 @@ void dodgeTimer(int value){
 				oppRotZ++;
 			}
 			else{
-				printf("hello");
 				dodge = false;
 			}
 			
@@ -231,10 +230,7 @@ void DrawOpponent(){
 void DrawPerson(){
 	glDisable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	//glColor3f(1,1,1);
-	//glEnable(GL_LIGHTING);
+	glColor3f(1,1,1);
 	glPushMatrix();//person position
 		glTranslatef(0,3,-30);
 		glPushMatrix(); //body and head and arms rotation
@@ -243,27 +239,25 @@ void DrawPerson(){
 			glRotatef(bodyRotZ,0,0,1);
 			glPushMatrix();//body size
 				glScalef(1,2,1);
-				//glColor3f(1,0,0);
+				glColor3f(1,0,0);
 				glutSolidCube(1);
 			glPopMatrix();//end body size
 			glPushMatrix();//head location
 				glScalef(0.75,0.75,0.75);
 				glTranslatef(0,2,0);
-				//glColor3f(0.6,0.1,0.1);
+				glColor3f(0.6,0.1,0.1);
 				glutSolidSphere(1,100,1000); 
-				//glBindTexture(GL_TEXTURE_2D, textures[CURRENT]);
-				//glutSolidTeapot(1);
 			glPopMatrix();//end head loc
 			glPushMatrix();//arm size
 				glScalef(0.5,2,0.5);
 				glPushMatrix(); //left arm position
-					//glColor3f(1,0,0);
+					glColor3f(1,0,0);
 					glTranslatef(-1.5,0,0);
 					glRotatef(0,0,0,1);
 					glutSolidCube(1);
 				glPopMatrix();//end left arm loc
 				glPushMatrix();//right arm loc
-					//glColor3f(1,0,0);
+					glColor3f(1,0,0);
 					glTranslatef(1.5,0,0);
 					glRotatef(0,0,0,1);
 					glutSolidCube(1);
@@ -272,14 +266,13 @@ void DrawPerson(){
 		glPopMatrix();//head and body and arms rotation
 		glPushMatrix();//legs size
 			glScalef(0.5,2,1);
-			//texture
 			glPushMatrix();//right leg location
-				//glColor3f(0,0,1);
+				glColor3f(0,0,1);
 				glTranslatef(0.5,-1,0);
 				glutSolidCube(1);
 			glPopMatrix();//end leg loc
 			glPushMatrix();//left leg location
-				//glColor3f(0,0,1);
+				glColor3f(0,0,1);
 				glTranslatef(-0.5,-1,0);
 				glutSolidCube(1);
 			glPopMatrix();//end leg loc
@@ -314,6 +307,22 @@ void FloorMesh() {
 			}
 		glEnd();
 	}
+}
+
+void DrawTree(int posX, int posZ){
+	glDisable(GL_LIGHTING);
+	glPushMatrix();
+		glTranslatef(posX,6,posZ);
+		glPushMatrix();
+			glRotatef(90,1,0,0);
+			glColor3f(0.5,0.2,0.2);	
+			gluCylinder(gluNewQuadric(),1,1,6,100,10);
+		glPopMatrix();
+		glTranslatef(0,5,0);
+		glRotatef(90,1,0,0);
+		glColor3f(0,0.7,0.2);	
+		gluCylinder(gluNewQuadric(),0.1,4,7,100,10);
+	glPopMatrix();
 }
 
 void LaunchSequence(std::vector<Plane*>::iterator obj) {
@@ -627,10 +636,15 @@ void display(void) {
 
 	FloorMesh();
 
-	glEnable(GL_TEXTURE_2D);
 	DrawPerson();
 	DrawOpponent();
-	glDisable(GL_TEXTURE_2D);
+	DrawTree(0,-10); //params xpos, zpos
+	DrawTree(-30,-15);
+	DrawTree(-47,-10);
+	DrawTree(-47,-94);
+	DrawTree(47,-94);
+	DrawTree(40,-50);
+
 
 	std::vector<float> IntersectList;
 
@@ -808,8 +822,8 @@ int main(int argc, char** argv)
 	createOurMenu();
 	init();
 	initTextures();
+	
 
 	glutMainLoop();				//starts the event glutMainLoop
-	
 	return(0);					//return may not be necessary on all compilers
 }
