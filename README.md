@@ -21,8 +21,7 @@ w - rotate your view up
 a - rotate your view left
 d - rotate your view right
 r - reset the game
-0 - 
-space bar -
+space bar - pick your pitch, yaw, and power
 
 From the list of additions to choose from we have included:
   - None geometric primitives [10%]
