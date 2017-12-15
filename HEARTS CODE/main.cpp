@@ -35,6 +35,8 @@ GLubyte* image2;
 int width2, height2;
 GLubyte* image3;
 int width3, height3;
+GLubyte* image4;
+int width4, height4;
 
 std::vector<Plane*> PlaneList;
 int selectedPlane = -1; // selected object ID, -1 if nothing selected
@@ -637,7 +639,7 @@ void display(void) {
 		glVertex2f(80, 40);
 	glEnd();
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width3, height3, 0, GL_RGB, GL_UNSIGNED_BYTE, image3);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width3, height4, 0, GL_RGB, GL_UNSIGNED_BYTE, image4);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -649,13 +651,13 @@ void display(void) {
 		glVertex2f(250, 250);
 		glColor3f(1,1,1);
 		glTexCoord2f(1,0);
-		glVertex2f(500, 250);
+		glVertex2f(600, 250);
 		glColor3f(1,1,1);
 		glTexCoord2f(1,1);
-		glVertex2f(500, 500);
+		glVertex2f(600, 600);
 		glColor3f(1,1,1);
 		glTexCoord2f(0,1);
-		glVertex2f(250, 500);
+		glVertex2f(250, 600);
 	glEnd();
 	
 	//flush out to single buffer
@@ -718,7 +720,8 @@ void init(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, image2);
 	image3 = LoadPPM("youLose.ppm", &width3, &height3);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width3, height3, 0, GL_RGB, GL_UNSIGNED_BYTE, image3);
-
+	image4 = LoadPPM("welcome.ppm", &width4, &height4);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width4, height4, 0, GL_RGB, GL_UNSIGNED_BYTE, image4);
 	for (int i=0; i<3; i++) {
 		Plane *newPlane = new Plane();
 		char filename[] = "plane_1.obj";
