@@ -1,4 +1,4 @@
-# Paper-Plane-Wars
+# Paper Plane Wars
 by:
 Emily Ashworth (001402976),
 Sharon Platkin (001316625),
@@ -25,10 +25,8 @@ Controls:
 
 
 From the list of additions to choose from we have included:
-  - None geometric primitives [10%]
   - lighting [5%]
   - textures [10%]
   - animated characters [5%]
   - camera control [10%]
   - picking [10%]
-  - and our own idea (plane control) [5-10%]
