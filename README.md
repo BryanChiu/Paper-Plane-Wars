@@ -23,6 +23,7 @@ Controls:
   - r -> reset the game
   - space bar -> pick your pitch, yaw, and power
 
+
 From the list of additions to choose from we have included:
   - None geometric primitives [10%]
   - lighting [5%]
