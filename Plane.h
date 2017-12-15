@@ -8,13 +8,14 @@ class Plane {
 		Plane();
 
 		void InitPlane(int id, char *file, float gravin, float xin, float yin, float zin, float xang, float yang);
-		void DrawPlane(bool active); // draws plane (with scaling)
+		void DrawPlane(bool active); // active changes material
 		void ExhibitPlane(int timerIn);
 		void MovePlane(); // moves plane according to velocity
 		void SetPitch(int timerIn);
 		void SetYaw(int timerIn);
 		void SetPower(int timerIn);
 		void LaunchPlane();
+		void BlowPlane(float xin, float yin);
 
 		int getID();
 		std::vector<float> getCoords(); // return coords to translate plane's matrix
@@ -31,7 +32,7 @@ class Plane {
 
 		int ID;
 		float gravity, airFriction; // 
-		float pitch, yaw, power;
+		float pitch, yaw, roll, power;
 		std::vector<float> pos;
 		std::vector<float> vel;
 		std::vector<float> vertices, uvs, normals;

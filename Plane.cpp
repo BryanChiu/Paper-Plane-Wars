@@ -230,12 +230,21 @@ void Plane::MovePlane() {
 
 	if (pos[1]<=0) {
 		pos[1] = 0;
-		vel[1] *= -1;
+		vel[1] *= -0.3;
 	}
 
 	float velMag = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
 
+	yaw = -asin(vel[0]/velMag)*180/PI;
+
 	pitch = asin(vel[1]/velMag)*180/PI;
+	if (pitch<0) {
+		pitch = 0;
+	}
+
+	if (abs(roll)>0.2) {
+		roll-=(abs(roll)/roll)*0.2;
+	}
 }
 
 void Plane::SetPitch(int timerIn) { // pitch is between 0 - 25
@@ -272,6 +281,18 @@ void Plane::LaunchPlane() {
 	fileout.close();
 }
 
+void Plane::BlowPlane(float xin, float yin) {
+	float velMag2D = sqrt(vel[0]*vel[0] + vel[2]*vel[2]);
+
+	if (velMag2D>0.01) {
+		vel[0]+=xin;
+		vel[1]+=yin;
+		vel[2] = -sqrt(velMag2D*velMag2D - vel[0]*vel[0]);
+		roll+=-xin*1000;
+		yaw+=-xin*500;
+	}
+}
+
 int Plane::getID() {
 	return ID;
 }
@@ -285,6 +306,7 @@ std::vector<float> Plane::getOrient() {
 
 	orient.push_back(pitch);
 	orient.push_back(yaw);
+	orient.push_back(roll);
 
 	return orient;
 }
