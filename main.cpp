@@ -268,6 +268,7 @@ void DrawPerson(){
 		glPushMatrix();//legs size
 			glScalef(0.5,2,1);
 			glColor3f(0,0,1);
+			
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, img_blackPants);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
