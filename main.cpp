@@ -850,8 +850,8 @@ void init(void)
 	image = LoadPPM("papertex.ppm", &width, &height);
 	image2 = LoadPPM("grass.ppm", &width2, &height2);
 	image3 = LoadPPM("youLose.ppm", &width3, &height3);
-	heart = LoadPPM("fullheart.ppm", &widthHeart, &heightHeart);
-	empty = LoadPPM("emptyheart.ppm", &widthEmpty, &heightEmpty);
+	heart = LoadPPM("fullheart2.ppm", &widthHeart, &heightHeart);
+	empty = LoadPPM("emptyheart2.ppm", &widthEmpty, &heightEmpty);
 
 	for (int i=0; i<3; i++) {
 		Plane *newPlane = new Plane();
