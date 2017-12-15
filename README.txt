@@ -11,10 +11,16 @@ Controls:
 
   - Left mouse click -> selecting plane
   - Space bar -> pick your pitch, yaw, and power
-  - Left arrow key -> turn plane to the left while in flight
-  - Right arrow key  -> turn plane to the right while in flight
-  - Up arrow key -> move plane up while in flight
-  - Down arrow key -> move plane down while in flight
+  - On your turn:
+  	- Left arrow key -> turn plane to the left while in flight
+  	- Right arrow key  -> turn plane to the right while in flight
+  	- Up arrow key -> move plane up while in flight
+  	- Down arrow key -> move plane down while in flight
+  - On opponent's turn:
+    	- Left arrow key -> moves your character left
+  	- Right arrow key  -> moves your character right
+  	- Up arrow key -> makes your character 'jump'
+  	- Down arrow key -> makes your character 'duck'
   - m -> move your character right
   - n -> move your character left
   - s -> rotate your view down
