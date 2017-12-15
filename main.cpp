@@ -366,6 +366,50 @@ void FloorMesh() {
 	}
 }
 
+void DrawTree(int posX, int posZ){
+	glEnable(GL_LIGHTING);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glPushMatrix();
+		glTranslatef(posX,6,posZ);
+		glPushMatrix();
+			glRotatef(90,1,0,0);
+			glColor3f(0.5,0.2,0.2);	
+
+			float wood_ambi[4] = {0.2,0.08,0.0,1}; //ambient light
+			float wood_diff[3] = {0.5, 0.3,0.1}; //shadows casting
+			float wood_spec[3] = {0.7,0.4,0.04};
+			float wood_shin = 0.078125;
+		    glMaterialfv(GL_FRONT, GL_AMBIENT, wood_ambi);
+		    glMaterialfv(GL_FRONT, GL_DIFFUSE, wood_diff);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, wood_spec);
+			glMaterialf(GL_FRONT, GL_SHININESS, wood_shin * 128.0);
+
+			gluCylinder(gluNewQuadric(),1,1,6,100,10);
+		glPopMatrix();
+
+		glTranslatef(0,5,0);
+		glRotatef(90,1,0,0);
+		glColor3f(0,0.7,0.2);
+
+		
+		float leaf_ambi[4] = {0.0,0.3,0.0,1}; //ambient light
+		float leaf_diff[3] = {0.1,0.9,0.1}; //shadows casting
+		float leaf_spec[3] = {0.04,0.04,0.04};
+		float leaf_shin = 0.078125;
+		
+	    glMaterialfv(GL_FRONT, GL_AMBIENT, leaf_ambi);
+	    glMaterialfv(GL_FRONT, GL_DIFFUSE, leaf_diff);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, leaf_spec);
+		glMaterialf(GL_FRONT, GL_SHININESS, leaf_shin * 128.0);
+
+		gluCylinder(gluNewQuadric(),0.1, 1, 2, 20, 20);
+		gluCylinder(gluNewQuadric(),0.1, 1.5, 3.75, 20, 20);
+		gluCylinder(gluNewQuadric(),0.1, 2, 5.75, 20, 20);
+		gluCylinder(gluNewQuadric(),0.1, 2.5, 8, 20, 20);
+	glPopMatrix();
+}
+
 void LaunchSequence(std::vector<Plane*>::iterator obj) {
 	glDisable(GL_LIGHTING);
 	wheelTimer++;
@@ -428,6 +472,12 @@ void PrepareLaunch() {
 	gluLookAt(camPos[0], camPos[1], camPos[2], camTarget[0], camTarget[1], camTarget[2], 0,1,0);
 
 	FloorMesh();
+	DrawTree(10,-80); //params xpos, zpos
+	DrawTree(-30,-15);
+	DrawTree(-47,-10);
+	DrawTree(-47,-94);
+	DrawTree(47,-94);
+	DrawTree(40,-50);
 
 	std::vector<float> IntersectList;
 
