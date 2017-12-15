@@ -218,6 +218,8 @@ void Plane::ExhibitPlane(int timerIn) {
 }
 
 void Plane::MovePlane() {
+	if (!inFlight) return;
+
 	pos[0] += vel[0];
 	pos[1] += vel[1];
 	pos[2] += vel[2];
@@ -229,8 +231,7 @@ void Plane::MovePlane() {
 	vel[1] += gravity;
 
 	if (pos[1]<=0) {
-		pos[1] = 0;
-		vel[1] *= -0.3;
+		inFlight = false;
 	}
 
 	float velMag = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
@@ -267,7 +268,11 @@ void Plane::LaunchPlane() {
 
 	velTemp.push_back(-sin(yaw*PI/180)/sin(90-abs(yaw*PI/180)));
 	velTemp.push_back(sin(pitch*PI/180)/sin(90-pitch*PI/180));
-	velTemp.push_back(-1);
+	if (abs(yaw)<50) {
+		velTemp.push_back(-1);
+	} else {
+		velTemp.push_back(1);
+	}
 
 	float normalMagn = sqrt(velTemp[0]*velTemp[0] + velTemp[1]*velTemp[1] + velTemp[2]*velTemp[2]);	
 
@@ -282,6 +287,8 @@ void Plane::LaunchPlane() {
 }
 
 void Plane::BlowPlane(float xin, float yin) {
+	if (!inFlight) return;
+
 	float velMag2D = sqrt(vel[0]*vel[0] + vel[2]*vel[2]);
 
 	if (velMag2D>0.01) {
@@ -291,6 +298,10 @@ void Plane::BlowPlane(float xin, float yin) {
 		roll+=-xin*1000;
 		yaw+=-xin*500;
 	}
+}
+
+void Plane::Collision() {
+	inFlight= false;
 }
 
 int Plane::getID() {
